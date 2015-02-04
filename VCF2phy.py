@@ -50,7 +50,8 @@ def VCF_line_parser(line, sequences, taxa):
 
 
 def Phylip_writer(sequences):
-	"""Take a dict and write a phylip file (no header so far)."""
+	"""Take a dict and write a phylip file."""
+	print(str(len(sequences)) + " " + str(len(sequences[list(sequences.keys())[0]])))
 	for names in sequences:
 		print(names + "\t", end="")
 		print(sequences[names], end="\n")
