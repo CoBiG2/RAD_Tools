@@ -6,7 +6,7 @@ The existing tools are mentioned below.
 
 ##VCF2phy
 
-This is a converter from VCF to phylip format. It is currently does not create the phylip header, you have to do it yourself. Other than that it seems to be working fine.
+This is a converter from VCF to phylip format. ~~It is currently does not create the phylip header, you have to do it yourself.~~ Headers are created fine too.
 
 ##RAD parser
 
