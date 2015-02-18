@@ -27,6 +27,12 @@ This is an *ugly* script that will transform an output from [STRUCTURE](http://p
 You **need** to have a trailing "/" at the ond of the output location, ou you'll get stragely named files in the parent directory of the one you are pointing at...
 
 
+##Loci_counter.py
+
+A simple script to add a numer to each loci in *.loci* files. Outputs to *stdout*, so "pipe away"!
+
+
+
 ##License
 
 Everything is under the GPLv3.
