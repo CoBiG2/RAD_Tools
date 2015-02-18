@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Loci_counter. If not, see <http://www.gnu.org/licenses/>.
 
-#Usage:python3 Loci_counter.py file.loci file.counted.loci
+#Usage:python3 Loci_counter.py file.loci > file.counted.loci
 
 
 def Loci_counter(loci_filename):
