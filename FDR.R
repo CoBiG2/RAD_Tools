@@ -21,7 +21,7 @@ library(stats)
 
 args <- commandArgs(trailingOnly = TRUE)
 
-#The csv file conatins an error (-100.0) which has to be replaced by (0.5).
+#The locilist.csv file conatins an error at the last column "-100.0" which has to be replaced by "0.5"
 cs <- read.csv(args[1], sep="\t", stringsAsFactors=FALSE)
 
 pos <- subset(cs, P.Simul.Fst.sample.Fst.>=0.5)
