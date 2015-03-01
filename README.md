@@ -32,6 +32,10 @@ You **need** to have a trailing "/" at the ond of the output location, ou you'll
 A simple script to add a numer to each loci in *.loci* files. Outputs to *stdout*, so "pipe away"!
 
 
+##structure_filter.py
+
+Another simple script that will filter the **columns** of a .structure file according to a "subset" file that contains nothing but the wanted marker names, one per line.
+
 
 ##License
 
