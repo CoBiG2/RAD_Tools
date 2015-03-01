@@ -28,6 +28,7 @@ def Loci_counter(loci_filename):
             lines = lines.replace(" " * len(str(counter)), str(counter), 1)
             counter += 1
         print(lines, end="")
+    infile.close()
 
 
 if __name__ == "__main__":
