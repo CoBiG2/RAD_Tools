@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with structure_filter. If not, see <http://www.gnu.org/licenses/>.
 
-#Usage:python3 structure_filter.py file.loci > file.counted.loci
+#Usage:python3 structure_filter.py subset_file.txt file.structure > file.filtered.structure
 
 def get_list_of_subset(subset_filename):
     """Reads the subset loci from a file and returns a list with it."""
@@ -35,10 +35,11 @@ def structure_breaker(structure_filename, subset):
     header = [" ", " "] + structure_file.readline().strip().split()
     for snps in subset:
         indeces.append(header.index(snps))
+    indeces.sort()
     print(" ".join(header[0:2] + [header[i] for i in indeces]))
     for lines in structure_file:
         lines = lines.strip().split()
-        print(" ".join(lines[0:2] + [lines[i] for i in indeces]))
+        print(" ".join(lines[0:2] + ["\t"] + [lines[i] for i in indeces]))
     
     structure_file.close()
 
