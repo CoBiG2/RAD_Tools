@@ -21,36 +21,40 @@
 
 import subprocess
 from multiprocessing import Pool
-from multiprocessing.dummy import Pool as ThreadPool
 
 ##Declare some global variables:
 #Where is structure?
 structure_bin = "/opt/structure/bin/structure"
 
 
-def RunProgram(K, rep_num):
+def RunProgram(iterations):
     """Runs external programs and deals with their output."""
+    K, rep_num = iterations
     program_stdout = []
     cli = [structure_bin, "-K", str(K), "-i", infile, "-o", outpath +  "/K" + str(K) + "_rep" + str(rep_num)]
     try:
         program = subprocess.Popen(cli, bufsize=64,shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        
         for lines in program.stdout:
             lines = lines.decode("utf-8").strip()
             print(lines)
             program_stdout.append(lines)
     except:
         quit("\nERROR:Program not found... exiting. Check your configuration file.\n")
-    return program_stdout
+
 
 
 def structure_threader(Ks, replicates, threads):
-    pool = ThreadPool(threads)
+    pool = Pool(threads)
     jobs = []
     for k in Ks:
         for rep in replicates:
             jobs.append((k, rep))
-            
+    
     pool.map(RunProgram, jobs)
+    pool.close()
+    pool.join()
+
 
 
 if __name__ == "__main__":
