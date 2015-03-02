@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with structure_by_threads2. If not, see <http://www.gnu.org/licenses/>.
 
-#Usage: python3 structure_pipe.py K reps infile outpath [num_of_threads]
+#Usage: python3 structure_pipe.py K reps infile outpath num_of_threads
 #Where "K" is the number of "Ks" to test, "reps" is the number of replicates
-#and num_of_threads is the number of threads (optional - 4 by default).
+#and num_of_threads is the number of threads.
 
 import subprocess
 from multiprocessing import Pool
@@ -65,8 +65,6 @@ if __name__ == "__main__":
     replicates = range(1, int(argv[2]) + 1)
     infile = argv[3]
     outpath = argv[4]
-    if argv[5]:
-        threads = int(argv[5])
-    else:
-        threads = 4
+    threads = int(argv[5])
+    
     structure_threader(Ks, replicates, threads)
