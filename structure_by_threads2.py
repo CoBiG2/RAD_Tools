@@ -43,10 +43,10 @@ def RunProgram(iterations):
         quit("\nERROR:Program not found... exiting. Check your configuration file.\n")
 
 
-
 def structure_threader(Ks, replicates, threads):
     pool = Pool(threads)
     jobs = []
+    # Ugly, ugly code. TODO: change to someting more elegant.
     for k in Ks:
         for rep in replicates:
             jobs.append((k, rep))
@@ -54,7 +54,6 @@ def structure_threader(Ks, replicates, threads):
     pool.map(RunProgram, jobs)
     pool.close()
     pool.join()
-
 
 
 if __name__ == "__main__":
