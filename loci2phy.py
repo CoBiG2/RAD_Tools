@@ -39,8 +39,8 @@ def vcf_parser(vcf_filename):
 
 
 def loci_parser(loci_filename, loci, seqnames):
-    """Gets a loci list, and a loci file and sequence names and filters
-    it. Returns a dict {seqname: sequence}"""
+    """Gets a loci list, and a loci file and sequence names and filters the loci
+    file according to the loci list. Returns a dict {seqname: sequence}"""
     loci_file = open(loci_filename, 'r')
 
     if loci[0] == "0":
