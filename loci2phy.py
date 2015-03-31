@@ -51,41 +51,50 @@ def loci_parser(loci_filename, loci, seqnames):
     c = 0
     seqlen = 0
     totlen = 0
+    taxaset = set(seqnames.keys())
+    seqlines= "  "
     for lines in loci_file:
         if estouinteressado == 1 and lines.startswith("//") == False:
-            lines = lines.strip(">\n").split()
+            taxaset = set()
+            seqlines = lines.strip(">\n").split()
 
-            seqnames[lines[0]] += lines[1]
+            seqnames[seqlines[0]] += seqlines[1]
+            taxaset.add(seqlines[0])
 
-            
         elif lines.startswith("//"):
-            seqlen = len(lines[1])
+            seqlen = len(seqlines[1])
             totlen += seqlen
-            print(totlen)
 
-            for k in seqnames.keys():
-                if len(seqnames[k]) < totlen:
-                    seqnames[k] += "N" * seqlen
+            vcfseqs = set(seqnames.keys())
+            difset = vcfseqs.difference(taxaset)
+
+            for t in difset:
+                seqnames[t] += "N" * seqlen
+
             c+=1
             estouinteressado=0
             if str(c) in loci:
                 estouinteressado=1
                 
     loci_file.close()
-    print(seqnames)
+
     return seqnames
 
 
 def phy_writer(phy_filename, seqnames):
     """Writes the output ready to submit to RAxML or other phylogeny
     program. Based on seqnames dict {seqname: sequence}"""
-    print(seqnames)
+    phy = open(phy_filename, 'w')
     seqnum = len(seqnames)
-    temp = seqnames.values()
-    bpnum = len(temp[0])
+    bpnum = len(list(seqnames.values())[0])
+    phy.write(str(seqnum) + " " + str(bpnum) + "\n")
+    for k, v in seqnames.items():
+        phy.write(k + "\t" + v + "\n")
+        
+    phy.close()
 
 if __name__ == "__main__":
     from sys import argv
     loci, seqnames = vcf_parser(argv[1])
     seqnames = loci_parser(argv[2], loci, seqnames)
-    #phy_writer(argv[3], seqnames)
+    phy_writer(argv[3], seqnames)
