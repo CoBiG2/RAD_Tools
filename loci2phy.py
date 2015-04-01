@@ -51,30 +51,38 @@ def loci_parser(loci_filename, loci, seqnames):
     c = 0
     seqlen = 0
     totlen = 0
-    taxaset = set(seqnames.keys())
+    vcfseqs = set(seqnames.keys())
+    #taxaset = set(vcfseqs)
+    taxaset = set()
     seqlines= "  "
     for lines in loci_file:
         if estouinteressado == 1 and lines.startswith("//") == False:
-            taxaset = set()
+
             seqlines = lines.strip(">\n").split()
 
             seqnames[seqlines[0]] += seqlines[1]
             taxaset.add(seqlines[0])
 
-        elif lines.startswith("//"):
+        elif lines.startswith("//") and estouinteressado == 1:
             seqlen = len(seqlines[1])
             totlen += seqlen
 
-            vcfseqs = set(seqnames.keys())
             difset = vcfseqs.difference(taxaset)
 
             for t in difset:
                 seqnames[t] += "N" * seqlen
 
-            c+=1
-            estouinteressado=0
+            taxaset = set()
+            c += 1
+            estouinteressado = 0
+
             if str(c) in loci:
-                estouinteressado=1
+                estouinteressado = 1
+        
+        elif estouinteressado == 0 and lines.startswith("//"):
+            c += 1
+            if str(c) in loci:
+                estouinteressado = 1
                 
     loci_file.close()
 
