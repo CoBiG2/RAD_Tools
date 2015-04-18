@@ -17,7 +17,7 @@
 # Usage: python3 loci2phy.py file.vcf file.loci file.phy
 
 def vcf_parser(vcf_filename):
-    """Parses a VCF file and returns a sorted list with loci names and a list
+    """Parses a VCF file and returns a dict with loci names and a sortd list
     with taxa names."""
     vcf = open(vcf_filename, 'r')
     loci = []
@@ -39,31 +39,29 @@ def vcf_parser(vcf_filename):
 
 
 def loci_parser(loci_filename, loci, seqnames):
-    """Gets a loci list, and a loci file and sequence names and filters the loci
+    """Gets a loci list, a .loci file and sequence names and filters the .loci
     file according to the loci list. Returns a dict {seqname: sequence}"""
     loci_file = open(loci_filename, 'r')
 
-    if loci[0] == "0":
-        estouinteressado = 1  
+    if loci[0] == "1":
+        gather_stuff = 1  
     else:
-        estouinteressado = 0  
+        gather_stuff = 0  
     
-    c = 0
     seqlen = 0
     totlen = 0
     vcfseqs = set(seqnames.keys())
-    #taxaset = set(vcfseqs)
     taxaset = set()
     seqlines= "  "
     for lines in loci_file:
-        if estouinteressado == 1 and lines.startswith("//") == False:
+        if gather_stuff == 1 and lines.startswith("//") == False:
 
             seqlines = lines.strip(">\n").split()
 
             seqnames[seqlines[0]] += seqlines[1]
             taxaset.add(seqlines[0])
 
-        elif lines.startswith("//") and estouinteressado == 1:
+        elif lines.startswith("//") and gather_stuff == 1:
             seqlen = len(seqlines[1])
             totlen += seqlen
 
@@ -73,16 +71,15 @@ def loci_parser(loci_filename, loci, seqnames):
                 seqnames[t] += "N" * seqlen
 
             taxaset = set()
-            c += 1
-            estouinteressado = 0
+            gather_stuff = 0
 
-            if str(c) in loci:
-                estouinteressado = 1
+            if str(int(lines[lines.find("|"):]) + 1) in loci:
+                gather_stuff = 1
         
-        elif estouinteressado == 0 and lines.startswith("//"):
-            c += 1
-            if str(c) in loci:
-                estouinteressado = 1
+        elif gather_stuff == 0 and lines.startswith("//"):
+
+            if str(int(lines[lines.find("|"):]) + 1) in loci:
+                gather_stuff = 1
                 
     loci_file.close()
 
