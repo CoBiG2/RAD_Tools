@@ -50,6 +50,7 @@ def loci_parser(loci_filename, loci, seqnames):
     
     seqlen = 0
     totlen = 0
+    locus_number = 1
     vcfseqs = set(seqnames.keys())
     taxaset = set()
     seqlines= "  "
@@ -70,16 +71,28 @@ def loci_parser(loci_filename, loci, seqnames):
             for t in difset:
                 seqnames[t] += "N" * seqlen
 
+            print(locus_number)
+
             taxaset = set()
             gather_stuff = 0
 
-            if str(int(lines[lines.find("|"):]) + 1) in loci:
-                gather_stuff = 1
+            try:
+                 if str(int(lines[lines.find("|"):]) + 1) in loci:
+                     gather_stuff = 1
+            except:
+                 locus_number += 1
+                 if str(locus_number) in loci:
+                    gather_stuff = 1
         
         elif gather_stuff == 0 and lines.startswith("//"):
 
-            if str(int(lines[lines.find("|"):]) + 1) in loci:
-                gather_stuff = 1
+            try:
+                if str(int(lines[lines.find("|"):]) + 1) in loci:
+                    gather_stuff = 1
+            except:
+                locus_number += 1
+                if str(locus_number) in loci:
+                    gather_stuff = 1
                 
     loci_file.close()
 
