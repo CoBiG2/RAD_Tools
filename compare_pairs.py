@@ -1,8 +1,7 @@
 #!/usr/bin/python
 
-# Copyright 2015 Francisco Pina Martins <f.pinamartins@gmail.com>
-# This file is part of Loci_counter.
-# Loci_counter is free software: you can redistribute it and/or modify
+# Copyright 2015 Diogo N. Silva <o.diogosilva@gmail.com>
+# compare_pairs.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -19,10 +18,28 @@
 # number of statistics and error rates. The vcf and pair mapping files must
 # be provided
 
+import argparse
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
+
+parser = argparse.ArgumentParser(description="Comparison of RAD assemblies "
+                                             "using technical replicates")
+
+parser.add_argument("-vcf", dest="vcf_infiles", nargs="+", help="Provide VCF "
+                    " file(s).", required=True)
+parser.add_argument("-pairs", dest="pairs_file", help="Provide the tab "
+                    " separated file containing the techical pairs.")
+parser.add_argument("-s", dest="single_assembly", action="store_const",
+                    const=True, help="Use this flag to analyse each vcf file "
+                    "independently.")
+parser.add_argument("-o", dest="output_plot", help="Name of the output plot "
+                    " file. Only has an effect when the -s option is not "
+                    " specified")
+
+arg = parser.parse_args()
+
 
 def parse_pairs(pair_file):
     """
@@ -151,7 +168,6 @@ def compare_pairs(vcf_file, pairs):
                         # If genotypes differ, add to snp_mismatch
                         if len(set(genotype)) != 1:
                             pair_statistics[pname]["snp_mismatch"] += 1
-                            print(genotype)
 
                 # Process the first line of the VCF file with content or a line
                 # from the same locus as the previous line. Here only
@@ -255,19 +271,91 @@ def plot_single_assembly(total_loci, stats, output_name):
     plt.savefig(output_name + ".png")
 
 
+def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name):
+    """
+    This function plots the four error rates for each assembly stats provided
+    by the multi_stats argument. It calculates the mean error for each error
+    rate and each assembly and displays a whisker plot.
+
+    :param multi_total_loci: list, each element is the total number of loci
+    for each assembly in the same position in multi_stats
+    :param multi_stats: OrderedDict object, each key is the name of the assembly
+    and the corresponding values are OrderedDict objects generated with the
+    compare_pairs function.
+    :param plot_name: string, name of the output
+    """
+
+    # Setting plot style
+    plt.style.use("ggplot")
+
+    # Set figure with four axes as a 2-d array
+    f, ax = plt.subplots(2, 2)
+
+    # Data storage for quick ploting
+    data = OrderedDict([("Total locus error", []),
+                        ("Partial locus error", []),
+                        ("Allele error", []),
+                        ("SNP error", [])])
+    assemblies = []
+
+    for total_loci, (a_name, stats) in zip(multi_total_loci,
+                                           multi_stats.items()):
+        total_loci = float(total_loci)
+        assemblies.append(a_name)
+
+        # Total locus error rate
+        locus_error_rate = [float(total_loci - x["shared_loci"]) / total_loci
+                            for x in stats.values()]
+        data["Total locus error"].append(locus_error_rate)
+
+        # Partial locus error rate
+        plocus_error_rate = [float(total_loci - x["partial_loci"]) /
+                             total_loci for x in stats.values()]
+        data["Partial locus error"].append(plocus_error_rate)
+
+        # Allele error rate
+        allele_error_rate = [float(x["allele_mismatch"]) /
+                             float(x["total_allele"]) for x in stats.values()]
+        data["Allele error"].append(allele_error_rate)
+
+        # SNP error rate
+        snp_error_rate = [float(x["snp_mismatch"]) / float(x["snp_number"])
+                          for x in stats.values()]
+        data["SNP error"].append(snp_error_rate)
+
+    for (k, val), a in zip(data.items(), [x for y in ax for x in y]):
+        a.set_title(k)
+        a.boxplot(val)
+        a.set_xticklabels(assemblies, rotation=45)
+
+    f.tight_layout()
+    plt.savefig(plot_name + ".png")
+
+
 def main():
 
     import sys
 
-    # Get arguments
-    args = sys.argv
+    # Parse arguments
+    pairs_file = arg.pairs_file
+    vcf_files = arg.vcf_infiles
+    plot_file = arg.output_plot
 
-    pairs_file = args[1]
-    vcf_file = args[2]
-
+    # Parse pairs file
     pairs = parse_pairs(pairs_file)
-    total_loci, stats = compare_pairs(vcf_file, pairs)
 
-    plot_single_assembly(total_loci, stats, vcf_file.split(".")[0])
+    if arg.single_assembly:
+        for vfile in vcf_files:
+            total_loci, stats = compare_pairs(vfile, pairs)
+            plot_single_assembly(total_loci, stats, vfile.split(".")[0])
+
+    else:
+        multi_stats = OrderedDict()
+        multi_loci = []
+        for vfile in vcf_files:
+            total_loci, stats = compare_pairs(vfile, pairs)
+            multi_stats[vfile] = stats
+            multi_loci.append(total_loci)
+        plot_multiple_assemblies(multi_loci, multi_stats, plot_file)
 
 main()
