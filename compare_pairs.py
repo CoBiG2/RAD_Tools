@@ -139,24 +139,25 @@ def compare_pairs(vcf_file, pairs):
                 # Get 2 element list with the genotypes for each replicate
                 genotype = [fields[pos[reps[0]]], fields[pos[reps[1]]]]
 
+                if set(genotype) != {"./."}:
+
+                    pair_statistics[pname]["partial_loci"] += 1
+
+                    # If both replicates contain data, update snps stats
+                    if "./." not in genotype:
+                        pair_statistics[pname]["snp_number"] += 1
+                        pair_statistics[pname]["shared_loci"] += 1
+
+                        # If genotypes differ, add to snp_mismatch
+                        if len(set(genotype)) != 1:
+                            pair_statistics[pname]["snp_mismatch"] += 1
+                            print(genotype)
+
                 # Process the first line of the VCF file with content or a line
                 # from the same locus as the previous line. Here only
                 # the snp_number and snp_mismatch will be updated if both
                 # replicates have data
                 if previous_locus == 0 or previous_locus == current_locus:
-
-                    if set(genotype) != {"./."}:
-
-                        pair_statistics[pname]["partial_loci"] += 1
-
-                        # If both replicates contain data, update snps stats
-                        if "./." not in genotype:
-                            pair_statistics[pname]["snp_number"] += 1
-                            pair_statistics[pname]["shared_loci"] += 1
-
-                            # If genotypes differ, add to snp_mismatch
-                            if len(set(genotype)) != 1:
-                                pair_statistics[pname]["snp_mismatch"] += 1
 
                     # Store genotype in temporary list
                     pair_statistics[pname]["temp_genotype"].append(genotype)
@@ -178,19 +179,6 @@ def compare_pairs(vcf_file, pairs):
                             if gen1 != gen2:
                                 pair_statistics[pname]["allele_mismatch"] += 1
                                 break
-
-                    if set(genotype) != {"./."}:
-
-                        pair_statistics[pname]["partial_loci"] += 1
-
-                        # If both replicates contain data, update snps stats
-                        if "./." not in genotype:
-                            pair_statistics[pname]["snp_number"] += 1
-                            pair_statistics[pname]["shared_loci"] += 1
-
-                            # If genotypes differ, add to snp_mismatch
-                            if len(set(genotype)) != 1:
-                                pair_statistics[pname]["snp_mismatch"] += 1
 
                     # Store genotype in temporary list
                     pair_statistics[pname]["temp_genotype"] = [genotype]
