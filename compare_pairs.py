@@ -145,7 +145,10 @@ def compare_pairs(vcf_file, pairs):
         else:
             fields = [x.strip() for x in line.split("\t")]
             # Get locus number
-            current_locus = fields[0]
+            if fields[0] != "un":
+                current_locus = fields[0]
+            else:
+                current_locus = fields[2]
             # Update total loci number
             total_loci += 1
 
@@ -154,7 +157,8 @@ def compare_pairs(vcf_file, pairs):
             for pname, reps in pairs.items():
 
                 # Get 2 element list with the genotypes for each replicate
-                genotype = [fields[pos[reps[0]]], fields[pos[reps[1]]]]
+                genotype = [fields[pos[reps[0]]].split(":")[0],
+                            fields[pos[reps[1]]].split(":")[0]]
 
                 if set(genotype) != {"./."}:
 
