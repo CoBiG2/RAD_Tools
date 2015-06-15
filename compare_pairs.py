@@ -275,7 +275,8 @@ def plot_single_assembly(total_loci, stats, output_name):
     plt.savefig(output_name + ".png")
 
 
-def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name):
+def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name,
+                             create_table=True):
     """
     This function plots the four error rates for each assembly stats provided
     by the multi_stats argument. It calculates the mean error for each error
@@ -287,6 +288,8 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name):
     and the corresponding values are OrderedDict objects generated with the
     compare_pairs function.
     :param plot_name: string, name of the output
+    :param create_table: Boolean, Whether (True) the results are saved in a
+    .csv file in table format or (False) not.
     """
 
     # Setting plot style
@@ -301,6 +304,10 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name):
                         ("Allele error", []),
                         ("SNP error", [])])
     assemblies = []
+
+    if create_table:
+        assembly_means = []
+        table_handle = open("{}.csv".format(plot_name), "w")
 
     for total_loci, (a_name, stats) in zip(multi_total_loci,
                                            multi_stats.items()):
@@ -328,13 +335,30 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name):
         data["SNP error"].append(snp_error_rate)
 
     for (k, val), a in zip(data.items(), [x for y in ax for x in y]):
+        # Creating plot
         a.set_title(k)
         a.boxplot(val)
         a.set_xticklabels(assemblies, rotation=45)
 
+        # Create table
+        if create_table:
+            # Get mean value for each error rate
+            er_mean = np.mean([x for y in val for x in y])
+            table_handle.write("{}:; {}\n".format(k, er_mean))
+
+            assembly_means.append([np.mean(x) for x in val])
+
+    if create_table:
+        table_handle.write("\nAssembly; Total locus error; Partial locus error"
+                           "; Allele error; SNP error\n")
+        for aname, vals in zip(assemblies, [x for x in zip(*assembly_means)]):
+            table_handle.write("{}; {}\n".format(aname,
+                                            ";".join([str(x) for x in vals])))
+
+        table_handle.close()
+
     f.tight_layout()
     plt.savefig(plot_name + ".png")
-
 
 def main():
 
