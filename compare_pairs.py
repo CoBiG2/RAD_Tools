@@ -37,6 +37,9 @@ parser.add_argument("-s", dest="single_assembly", action="store_const",
 parser.add_argument("-o", dest="output_plot", help="Name of the output plot "
                     " file. Only has an effect when the -s option is not "
                     " specified")
+parser.add_argument("-c", dest="convert_vcf", action="store_const",
+                    const=True, help="Use this option to create"
+                    " a filtered .vcf file without erroneous SNPs")
 
 arg = parser.parse_args()
 
@@ -65,7 +68,7 @@ def parse_pairs(pair_file):
     return pairs
 
 
-def compare_pairs(vcf_file, pairs):
+def compare_pairs(vcf_file, pairs, filt_vcf=False):
     """
     Main function comparing the information contained in a VCF file between
     pairs of technical replicates. The relevant statistics will be stored as
@@ -99,10 +102,17 @@ def compare_pairs(vcf_file, pairs):
     :param vcf_file: string, path to VCF file
     :param pairs: dictionary, containing pair name as key and a list with the
     names of pair replicates as value
+    :param filt_vcf: boolean, whether a new filtered vcf file will be created
+    without erroneous SNPs (True) or not (False)
 
     """
 
     vcf_handle = open(vcf_file)
+
+    # Create filtered vcf file handle if specified
+    if filt_vcf:
+        vcf_name = vcf_file.split(".")[0] + "_filtered.vcf"
+        filtered_vcf = open(vcf_name, "w")
 
     # This will keep track of the previous locus number
     previous_locus = 0
@@ -112,6 +122,10 @@ def compare_pairs(vcf_file, pairs):
 
     # This variable will store the column number of each sample
     pos = {}
+
+    # This variable is used when filtering a vcf file. When a vcf line should be
+    # filtered, this variable is set to False
+    filter_locus = True
 
     # This attribute will store the statistics for each pair. Each pair will
     # contain a dictionary as a value where all relevant statistics will be
@@ -131,10 +145,16 @@ def compare_pairs(vcf_file, pairs):
     for line in vcf_handle:
         # Skip header
         while line.startswith("##"):
-            line = next(vcf_handle)
+            if filt_vcf:
+                filtered_vcf.write(line)
+                line = next(vcf_handle)
+            else:
+                line = next(vcf_handle)
 
         # Get the fields of the samples and associate them to the pairs
         if line.startswith("#CHROM"):
+            if filt_vcf:
+                filtered_vcf.write(line)
             fields = [x.strip() for x in line.split("\t")]
             for sample in [x.strip() for y in pairs.values() for x in y]:
                 pos[sample] = fields.index(sample)
@@ -172,6 +192,8 @@ def compare_pairs(vcf_file, pairs):
                         # If genotypes differ, add to snp_mismatch
                         if len(set(genotype)) != 1:
                             pair_statistics[pname]["snp_mismatch"] += 1
+                            filter_locus = False
+
 
                 # Process the first line of the VCF file with content or a line
                 # from the same locus as the previous line. Here only
@@ -202,6 +224,11 @@ def compare_pairs(vcf_file, pairs):
 
                     # Store genotype in temporary list
                     pair_statistics[pname]["temp_genotype"] = [genotype]
+
+            if filt_vcf and filter_locus:
+                filtered_vcf.write(line)
+
+            filter_locus = True
 
             previous_locus = current_locus
 
@@ -368,13 +395,14 @@ def main():
     pairs_file = arg.pairs_file
     vcf_files = arg.vcf_infiles
     plot_file = arg.output_plot
+    convert_vcf = arg.convert_vcf
 
     # Parse pairs file
     pairs = parse_pairs(pairs_file)
 
     if arg.single_assembly:
         for vfile in vcf_files:
-            total_loci, stats = compare_pairs(vfile, pairs)
+            total_loci, stats = compare_pairs(vfile, pairs, convert_vcf)
             plot_single_assembly(total_loci, stats, vfile.split(".")[0])
 
     else:
