@@ -24,7 +24,7 @@ def get_exp_obs_het(filehandle, outfile_name):
     pop_names, loci_names = filehandle.get_basic_info()
 
     outfile=open(outfile_name,'w')
-    double_loci = [loci_names[i//2] for i in range(len(loci_names)*2)]
+    double_loci = [loci_names[i//3] for i in range(len(loci_names)*3)]
     outfile.write("\t" + "\t".join(double_loci) + "\n")
     for pop in range(len(pop_names)):
         hetros = pop_names[pop] + "\t"
