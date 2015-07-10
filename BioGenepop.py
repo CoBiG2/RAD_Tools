@@ -28,9 +28,13 @@ def get_exp_obs_het(filehandle, outfile_name):
     outfile.write("\t" + "\t".join(double_loci) + "\n")
     for pop in range(len(pop_names)):
         hetros = pop_names[pop] + "\t"
+        loci_map = filehandle.test_hw_pop(pop, "excess")
         for locus in loci_names:
             exp_homo, obs_homo, exp_hetero, obs_hetero = filehandle.get_heterozygosity_info(pop,locus)
-            hetros += str(exp_hetero) + "\t" + str(obs_hetero) + "\t"
+            if loci_map[locus] is not None:
+                hetros += str(loci_map[locus][0]) + "\t" + str(exp_hetero) + "\t" + str(obs_hetero) + "\t"
+            else:
+                hetros += "-\t" + str(exp_hetero) + "\t" + str(obs_hetero) + "\t"
         hetros = hetros.rstrip() + "\n"
         outfile.write(hetros)
     outfile.close()
