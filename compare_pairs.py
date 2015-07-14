@@ -40,6 +40,9 @@ parser.add_argument("-o", dest="output_plot", help="Name of the output plot "
 parser.add_argument("-c", dest="convert_vcf", action="store_const",
                     const=True, help="Use this option to create"
                     " a filtered .vcf file without erroneous SNPs")
+parser.add_argument("-f", dest="filter_vcf", help="Use this option to filter"
+                    " a vcf file according to a text file containing the "
+                    "chromossome positions to be excluded.")
 
 arg = parser.parse_args()
 
@@ -108,6 +111,9 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
     """
 
     vcf_handle = open(vcf_file)
+
+    # Stores the locus number of the error containing loci
+    bad_loci = []
 
     # Create filtered vcf file handle if specified
     if filt_vcf:
@@ -192,8 +198,8 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
                         # If genotypes differ, add to snp_mismatch
                         if len(set(genotype)) != 1:
                             pair_statistics[pname]["snp_mismatch"] += 1
+                            bad_loci.append(int(current_locus))
                             filter_locus = False
-
 
                 # Process the first line of the VCF file with content or a line
                 # from the same locus as the previous line. Here only
@@ -231,6 +237,12 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
             filter_locus = True
 
             previous_locus = current_locus
+
+    # Write bad loci list to a file
+    bad_loci = sorted(list(set(bad_loci)))
+    with open("bad_loci.text", "w") as bad_fh:
+        for l in bad_loci:
+            bad_fh.write("{}\n".format(l))
 
     return total_loci, pair_statistics
 
@@ -387,6 +399,30 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name,
     f.tight_layout()
     plt.savefig(plot_name + ".png")
 
+
+def filter_vcf_chromossmes(vcf_file, bad_loci_file):
+    """
+    Filters the chromossome positions of a vcf_file that are contained in the
+    bad_loci_file.
+
+    :param vcf_file: string, path to the vcf file
+    :param bad_loci_file: string, path to the text file containing the
+    chromossomes to be excluded
+    """
+
+    with open(vcf_file) as vcf_fh, open(bad_loci_file) as bad_fh, \
+        open("{}_filtered.vcf".format(vcf_file.split(".")[0]), "w") as filt_fh:
+
+        bad_loci = bad_fh.read().split("\n")
+
+        for line in vcf_fh:
+            if line.startswith("#"):
+                filt_fh.write(line)
+            elif line.strip() != "":
+                loci_number = line.split()[0]
+                if loci_number not in bad_loci:
+                    filt_fh.write(line)
+
 def main():
 
     import sys
@@ -396,11 +432,15 @@ def main():
     vcf_files = arg.vcf_infiles
     plot_file = arg.output_plot
     convert_vcf = arg.convert_vcf
+    filter_vcf = arg.filter_vcf
 
     # Parse pairs file
     pairs = parse_pairs(pairs_file)
 
-    if arg.single_assembly:
+    if arg.filter_vcf:
+        filter_vcf_chromossmes(vcf_files[0], filter_vcf)
+
+    elif arg.single_assembly:
         for vfile in vcf_files:
             total_loci, stats = compare_pairs(vfile, pairs, convert_vcf)
             plot_single_assembly(total_loci, stats, vfile.split(".")[0])
