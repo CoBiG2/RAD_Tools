@@ -115,6 +115,12 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
     # Stores the locus number of the error containing loci
     bad_loci = []
 
+    # Stores the position of bad snps for plotting
+    bad_snps = []
+
+    # Stores the number of bad SNPs for each bad_loci for plotting
+    bad_loci_distribution = {}
+
     # Create filtered vcf file handle if specified
     if filt_vcf:
         vcf_name = vcf_file.split(".")[0] + "_filtered.vcf"
@@ -199,6 +205,11 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
                         if len(set(genotype)) != 1:
                             pair_statistics[pname]["snp_mismatch"] += 1
                             bad_loci.append(int(current_locus))
+                            bad_snps.append(int(fields[1]))
+                            if current_locus in bad_loci_distribution:
+                                bad_loci_distribution[current_locus] += 1
+                            else:
+                                bad_loci_distribution[current_locus] = 1
                             filter_locus = False
 
                 # Process the first line of the VCF file with content or a line
@@ -243,6 +254,16 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
     with open("bad_loci.text", "w") as bad_fh:
         for l in bad_loci:
             bad_fh.write("{}\n".format(l))
+
+    # Plot error position and quantity distribution
+    plt.hist(bad_snps)
+    plt.savefig("bad_snp_positions.png")
+    plt.close()
+
+    plt.hist(list(bad_loci_distribution.values()))
+    print(bad_loci_distribution)
+    plt.savefig("bad_loci_distribution.png")
+    plt.close()
 
     return total_loci, pair_statistics
 
