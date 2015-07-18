@@ -26,17 +26,17 @@ cs <- read.csv(args[1], sep="\t", stringsAsFactors=FALSE)
 
 pos <- subset(cs, P.Simul.Fst.sample.Fst.>=0.5)
 bal <- subset(cs, P.Simul.Fst.sample.Fst.<0.5)
+#bal <- cs[(cs$P.Simul.Fst.sample.Fst.<0.5) | (is.na(cs$P.Simul.Fst.sample.Fst.)), ] # Usefull for a different purpose.
+
 
 Qbal <- p.adjust(bal$P.Simul.Fst.sample.Fst., method="fdr")
 
 invpos <- 1 - pos$P.Simul.Fst.sample.Fst.
 Qpos <- 1 - p.adjust(invpos, method="fdr")
 
-pos[[5]] <- Qpos
-names(pos)[5] <- "Q-values"
+pos["Q-values"] <- Qpos
 
-bal[[5]] <- Qbal
-names(bal)[5] <- "Q-values"
+bal["Q-values"] <- Qbal
 
 All <- rbind(bal, pos)
 
