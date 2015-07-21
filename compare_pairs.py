@@ -132,6 +132,10 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
     # This will store the total number of loci
     total_loci = 0
 
+    # Total number of chromossome
+    total_chromossomes = 1
+    record_chromossome = True
+
     # This variable will store the column number of each sample
     pos = {}
 
@@ -227,6 +231,10 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
                 # list will be reset for the next locus
                 else:
 
+                    if record_chromossome:
+                        total_chromossomes += 1
+                        record_chromossome = False
+
                     # Analyses of alleles.
                     glist = pair_statistics[pname]["temp_genotype"]
 
@@ -246,6 +254,7 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
                 filtered_vcf.write(line)
 
             filter_locus = True
+            record_chromossome = True
 
             previous_locus = current_locus
 
@@ -256,14 +265,21 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
             bad_fh.write("{}\n".format(l))
 
     # Plot error position and quantity distribution
-    plt.hist(bad_snps)
-    plt.savefig("bad_snp_positions.png")
-    plt.close()
+    try:
+        plt.hist(bad_snps)
+        plt.savefig("bad_snp_positions.png")
+        plt.close()
+    except ValueError:
+        print("No SNP mismatch found")
 
-    plt.hist(list(bad_loci_distribution.values()))
-    print(bad_loci_distribution)
-    plt.savefig("bad_loci_distribution.png")
-    plt.close()
+    try:
+        plt.hist(list(bad_loci_distribution.values()))
+        plt.savefig("bad_loci_distribution.png")
+        plt.close()
+    except ValueError:
+        print("No locus with SNP mismatch found")
+
+    print(total_chromossomes)
 
     return total_loci, pair_statistics
 
