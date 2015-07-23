@@ -32,7 +32,8 @@ parser = argparse.ArgumentParser(description="Parsing statistical output of"
 parser.add_argument("-in", dest="infile", help="The vcftools output file",
                     required=True)
 parser.add_argument("--weir-fst", dest="weir_fst", help="Parse a Weir FST"
-                    " output file", const=True, action="store_const")
+                    " output file. Provide a minimum fst threshold to save"
+                    " loci.")
 parser.add_argument("--singleton", dest="singleton", const=True,
                     action="store_const", help="Parse a singleton/doubleton"
                     " output file")
@@ -40,12 +41,15 @@ parser.add_argument("--singleton", dest="singleton", const=True,
 arg = parser.parse_args()
 
 
-def weir_fst(infile):
+def weir_fst(infile, fst_threshold=None):
     """
     Parses the Weir and Cockerham FST output file
     """
 
     fst_vals = []
+
+    if fst_threshold:
+        fst_fh = open("fst_chosen_loci.txt", "w")
 
     with open(infile) as fh:
 
@@ -54,7 +58,16 @@ def weir_fst(infile):
 
         for line in fh:
             if line.strip().split()[2] != "-nan":
-                fst_vals.append(float(line.strip().split()[2]))
+                fst = float(line.strip().split()[2])
+                fst_vals.append(fst)
+
+                if fst_threshold:
+                    if fst >= fst_threshold:
+                        fst_fh.write("{}\t{}\n".format(line.strip().split()[0],
+                                                       line.strip().split()[1]))
+
+    if fst_threshold:
+        fst_fh.close()
 
     # Creating plots
     # Histogram
@@ -116,7 +129,7 @@ def main():
     infile = arg.infile
 
     if arg.weir_fst:
-        weir_fst(infile)
+        weir_fst(infile, float(arg.weir_fst))
 
     if arg.singleton:
         singletons(infile)
