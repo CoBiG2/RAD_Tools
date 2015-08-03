@@ -25,15 +25,15 @@ def vcf_parser(vcf_filename):
 
     for line in vcf:
         if line.startswith("##"):
-            pass            
+            pass
         elif line.startswith("#CHROM"):
             for names in line.split()[9:]:
                 seqnames[names] = ""
         else:
             loci.append(line.split()[0])
-  
+
     vcf.close()
-    loci = sorted(list(set(loci))) 
+    loci = sorted(list(set(loci)))
 
     return loci, seqnames
 
@@ -44,10 +44,10 @@ def loci_parser(loci_filename, loci, seqnames):
     loci_file = open(loci_filename, 'r')
 
     if loci[0] == "1":
-        gather_stuff = 1  
+        gather_stuff = 1
     else:
-        gather_stuff = 0  
-    
+        gather_stuff = 0
+
     seqlen = 0
     totlen = 0
     locus_number = 1
@@ -60,8 +60,9 @@ def loci_parser(loci_filename, loci, seqnames):
 
             seqlines = lines.strip(">\n").split()
 
-            seqnames[seqlines[0]] += seqlines[1]
-            taxaset.add(seqlines[0])
+            if seqlines[0] in seqnames:
+                seqnames[seqlines[0]] += seqlines[1]
+                taxaset.add(seqlines[0])
 
         elif lines.startswith("//") and gather_stuff == 1:
             seqlen = len(seqlines[1])
@@ -85,7 +86,7 @@ def loci_parser(loci_filename, loci, seqnames):
                  locus_number += 1
                  if str(locus_number) in loci:
                     gather_stuff = 1
-        
+
         elif gather_stuff == 0 and lines.startswith("//"):
 
             try:
@@ -95,7 +96,7 @@ def loci_parser(loci_filename, loci, seqnames):
                 locus_number += 1
                 if str(locus_number) in loci:
                     gather_stuff = 1
-                
+
     loci_file.close()
 
     return seqnames, seqlens
@@ -112,7 +113,7 @@ def phy_writer(phy_filename, seqnames, seqlens):
     phy.write(str(seqnum) + " " + str(bpnum) + "\n")
     for k, v in seqnames.items():
         phy.write(k + "\t" + v + "\n")
-        
+
     phy.close()
     
     part = open(phy_filename[:-4] + ".part", 'w')
