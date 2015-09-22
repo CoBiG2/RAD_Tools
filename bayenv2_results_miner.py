@@ -22,7 +22,7 @@ import re
 
 def main(bf_filename, envfile_name):
     """
-    Parses the ".bf" file outputted by Bayenv2 and retrns the SNPs with
+    Parses the ".bf" file outputted by Bayenv2 and returns the SNPs with
     putative associations.
     """
 
