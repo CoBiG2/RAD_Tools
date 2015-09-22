@@ -14,13 +14,13 @@
 # You should have received a copy of the GNU General Public License
 # along with bayenv2_results_miner.  If not, see <http://www.gnu.org/licenses/>.
 
-# Usage: python3 bayenv2_results_miner.py file.bf env_vars.txt
+# Usage: bayenv2_results_miner.py file.bf env_vars.txt [BF_value] [p-value]
 
 
 import re
 
 
-def main(bf_filename, envfile_name):
+def main(bf_filename, envfile_name, bayesfactor=10, p_value=0.05):
     """
     Parses the ".bf" file outputted by Bayenv2 and returns the SNPs with
     putative associations.
@@ -38,7 +38,7 @@ def main(bf_filename, envfile_name):
         # pearson = [float(x) for x in lines[3::3]] # Unused so far
 
         for i in range(len(bfs)):
-            if bfs[i] >= 10 and spearman[i] < 0.05:
+            if bfs[i] >= bayesfactor and spearman[i] < p_value:
                 print(snp_name + ": " + env_vars[i])
 
     infile.close()
@@ -66,4 +66,5 @@ def parse_env_vars(envfile_name):
 
 if __name__ == "__main__":
     from sys import argv
-    main(argv[1], argv[2])
+    ARGUMENTS = argv[1:]
+    main(*ARGUMENTS)
