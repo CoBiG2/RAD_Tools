@@ -17,7 +17,7 @@ This is a demultiplexer for RAD and GBS data. It is still incomplete, because it
 ##FDR.R
 
 This is a script made in R used to calculate the *Q*-values from the *p*-values csv table that is outputed from [lositan](http://popgen.net/soft/lositan/).
-The input is the mentioned csv, and a new csv is outputed, with an extra *q*-values column. 
+The input is the mentioned csv, and a new csv is outputed, with an extra *q*-values column.
 That simple.
 
 
@@ -29,12 +29,16 @@ You **need** to have a trailing "/" at the ond of the output location, ou you'll
 
 ##Loci_counter.py
 
-A simple script to add a numer to each loci in *.loci* files. Outputs to *stdout*, so "pipe away"!
+A simple script to add a number to each loci in *.loci* files. Outputs to *stdout*, so "pipe away"!
 
 
 ##structure_filter.py
 
 Another simple script that will filter the **columns** of a .structure file according to a "subset" file that contains nothing but the wanted marker names, one per line.
+
+##bayenv2_results_miner.py
+
+A simple script to look mine the data files produced by Bayenv2. It will look for any SNPs which have a BF>=10 AND a spearman p-value < 0.05.
 
 
 ##License
