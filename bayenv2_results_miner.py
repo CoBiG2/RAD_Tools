@@ -44,6 +44,7 @@ def name_sanitizer(snp_name):
     """
     Replaces the full text on the SNP name for something sensible & returns it.
     """
+
     replacement = re.search("/\\d+.", snp_name).group(0)[1:-1]
     replacement = "SNP_" + replacement
 
@@ -54,6 +55,7 @@ def parse_env_vars(envfile_name):
     Pareses a txt file with one environment variable name per line and returns
     a list with these values.
     """
+
     env_vars = []
     infile = open(envfile_name, 'r')
     for lines in infile:
