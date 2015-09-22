@@ -14,9 +14,6 @@
 # You should have received a copy of the GNU General Public License
 # along with bayenv2_results_miner.  If not, see <http://www.gnu.org/licenses/>.
 
-# Usage: bayenv2_results_miner.py file.bf env_vars.txt [BF_value] [p-value]
-
-
 import re
 
 
@@ -65,6 +62,7 @@ def parse_env_vars(envfile_name):
     return env_vars
 
 if __name__ == "__main__":
+    # Usage: bayenv2_results_miner.py file.bf env_vars.txt [BF_value] [p-value]
     from sys import argv
     ARGUMENTS = argv[1:]
     main(*ARGUMENTS)
