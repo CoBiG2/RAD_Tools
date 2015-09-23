@@ -23,6 +23,7 @@ def main(loci_filename, vcf_filename):
     """
     Handle everything.
     """
+
     loci_list = Loci_filter_from_vcf.VCF_parser(vcf_filename)
     loci_parser(loci_filename, loci_list)
 
