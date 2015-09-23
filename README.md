@@ -38,7 +38,7 @@ Another simple script that will filter the **columns** of a .structure file acco
 
 ## bayenv2_results_miner.py
 
-A simple script to look mine the data files produced by Bayenv2. It will look for any SNPs which have a BF>=10 AND a spearman p-value < 0.05.
+A simple script to look mine the data files produced by Bayenv2. It will look for any SNPs which have a BF>=10 AND a spearman p-value < 0.05 (these values can be changed in the source).
 
 ## filter_loci_by_vcf.py
 
