@@ -36,8 +36,55 @@ parser = argparse.ArgumentParser(description="Comparison of RAD assemblies "
 
 parser.add_argument("-in", dest="infiles", required=True, nargs="+",
                     help="Provide the SAM files separated by whitespace")
+parser.add_argument("-mode", dest="mode", choices=["replicates", "assemblies"],
+                    help="replicates: Provide a SAM file for each replicate;"
+                          " assemblies: Provide a VCF file for each assembly")
 
 arg = parser.parse_args()
+
+
+def parse_vcf(vcf_file):
+    """
+    Parses a VCF file and retains the location of all SNPs in the genome as a list of tupples
+    """
+
+    vcf_fh = open(vcf_file)
+    snp_locations = []
+
+    for line in vcf_fh:
+        #Skip header
+        if line.startswith("#"):
+            pass
+        else:
+            fields = line.strip().split()
+            chrom = fields[0]
+            pos = fields[1]
+            snp_locations.append([chrom, pos])
+
+    return snp_locations
+
+
+def vcf_overlap(stor1, stor2):
+    """
+    Determines the SNPs and chromosome overlap between two vcf storage objects
+    """
+
+    # Get SNP position overlap and data set exclusives
+    stor1_str = ["".join(x) for x in stor1]
+    stor2_str = ["".join(x) for x in stor2]
+    snp_overlap = len(set(stor1_str).intersection(set(stor2_str)))
+    stor1_exclusive = len(set(stor1_str) - set(stor2_str))
+    stor2_exclusive = len(set(stor2_str) - set(stor1_str))
+
+    # Get chromosome overlap
+    chrom1 = [x[0] for x in stor1]
+    chrom2 = [x[0] for x in stor2]
+    chrom_overlap = len(set(chrom1).intersection(set(chrom2)))
+
+    log_handle = open("vcf_overlap.txt", "w")
+
+    log_handle.write("SNP intersection stats:\nSNP overlap: {}\nExclusive to VCF1: {}\nExclusive to VCF2: "
+                     "{}\n\nChromosome overlap: {}".format(snp_overlap, stor1_exclusive, stor2_exclusive, chrom_overlap))
 
 
 def parse_sam(sam_file):
@@ -121,12 +168,18 @@ def main():
     # Arguments
     infiles = arg.infiles
 
-    storage = []
+    if arg.mode == "replicates":
+        storage = []
 
-    for f in infiles:
-        map_loc = parse_sam(f)
-        storage.append((os.path.basename(f), map_loc))
+        for f in infiles:
+            map_loc = parse_sam(f)
+            storage.append((os.path.basename(f), map_loc))
 
-    get_overlap(storage)
+        get_overlap(storage)
+
+    elif arg.mode == "assemblies":
+        vcf1_storage = parse_vcf(infiles[0])
+        vcf2_storage = parse_vcf(infiles[1])
+        vcf_overlap(vcf1_storage, vcf2_storage)
 
 main()
