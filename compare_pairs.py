@@ -208,7 +208,7 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
                         # If genotypes differ, add to snp_mismatch
                         if len(set(genotype)) != 1:
                             pair_statistics[pname]["snp_mismatch"] += 1
-                            bad_loci.append(int(current_locus))
+                            bad_loci.append(current_locus)
                             bad_snps.append(int(fields[1]))
                             if current_locus in bad_loci_distribution:
                                 bad_loci_distribution[current_locus] += 1
