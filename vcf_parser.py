@@ -48,7 +48,7 @@ def remove_invariable(vcf_file):
             elif line.strip() != "":
 
                 # Get genotypes. Remove genotypes with no data.
-                genotypes = [x for x in line.split()[9:] if x != "./."]
+                genotypes = [x.split(":")[0] for x in line.split()[9:] if x.split(":")[0] != "./."]
 
                 # If number of unique genotypes higher than 1, save SNP
                 if len(set(genotypes)) > 1:
