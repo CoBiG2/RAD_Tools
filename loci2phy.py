@@ -74,8 +74,6 @@ def loci_parser(loci_filename, loci, seqnames):
             for t in difset:
                 seqnames[t] += "N" * seqlen
 
-            print(locus_number)
-
             taxaset = set()
             gather_stuff = 0
 
@@ -122,8 +120,24 @@ def phy_writer(phy_filename, seqnames, seqlens):
     
     part.close()
 
+def fas_writer(fas_filename, seqnames):
+    """
+    Writes the output in fasta format. Arguments as in phy_writer function
+    """
+
+    fh = open(fas_filename, "w")
+
+    for k, v in seqnames.items():
+        fh.write(">{}\n{}\n".format(k, v))
+
+    fh.close()
+
 if __name__ == "__main__":
     from sys import argv
     loci, seqnames = vcf_parser(argv[1])
     seqnames, seqlens = loci_parser(argv[2], loci, seqnames)
-    phy_writer(argv[3], seqnames, seqlens)
+    try:
+        if argv[4] == "-f":
+            fas_writer(argv[3], seqnames)
+    except IndexError:
+        phy_writer(argv[3], seqnames, seqlens)
