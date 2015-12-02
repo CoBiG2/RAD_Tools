@@ -183,6 +183,7 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
             # Get locus number
             if fields[0] != "un":
                 current_locus = fields[0]
+                current_pos = fields[1]
             else:
                 current_locus = fields[2]
             # Update total loci number
@@ -208,7 +209,7 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
                         # If genotypes differ, add to snp_mismatch
                         if len(set(genotype)) != 1:
                             pair_statistics[pname]["snp_mismatch"] += 1
-                            bad_loci.append(current_locus)
+                            bad_loci.append((current_locus, current_pos))
                             bad_snps.append(int(fields[1]))
                             if current_locus in bad_loci_distribution:
                                 bad_loci_distribution[current_locus] += 1
@@ -262,7 +263,7 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
     bad_loci = sorted(list(set(bad_loci)))
     with open("bad_loci.text", "w") as bad_fh:
         for l in bad_loci:
-            bad_fh.write("{}\n".format(l))
+            bad_fh.write("{}\t{}\n".format(l[0], l[1]))
 
     # Plot error position and quantity distribution
     try:
@@ -452,12 +453,17 @@ def filter_vcf_chromossmes(vcf_file, bad_loci_file):
 
         bad_loci = bad_fh.read().split("\n")
 
+        bad_loci = [x.split() for x in bad_loci]
+
+        print(bad_loci)
+
         for line in vcf_fh:
             if line.startswith("#"):
                 filt_fh.write(line)
             elif line.strip() != "":
                 loci_number = line.split()[0]
-                if loci_number not in bad_loci:
+                pos_number = line.split()[1]
+                if [loci_number, pos_number] not in bad_loci:
                     filt_fh.write(line)
 
 def main():
