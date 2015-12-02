@@ -36,9 +36,10 @@ parser = argparse.ArgumentParser(description="Comparison of RAD assemblies "
 
 parser.add_argument("-in", dest="infiles", required=True, nargs="+",
                     help="Provide the SAM files separated by whitespace")
-parser.add_argument("-mode", dest="mode", choices=["replicates", "assemblies"],
-                    help="replicates: Provide a SAM file for each replicate;"
-                          " assemblies: Provide a VCF file for each assembly")
+parser.add_argument("-mode", dest="mode", choices=["replicates", "assemblies",
+                    "mix"], help="replicates: Provide a SAM file for each "
+                    "replicate; assemblies: Provide a VCF file for each "
+                    "assembly; mix: Provide a a VCF and SAM file")
 
 arg = parser.parse_args()
 
@@ -85,6 +86,50 @@ def vcf_overlap(stor1, stor2):
 
     log_handle.write("SNP intersection stats:\nSNP overlap: {}\nExclusive to VCF1: {}\nExclusive to VCF2: "
                      "{}\n\nChromosome overlap: {}".format(snp_overlap, stor1_exclusive, stor2_exclusive, chrom_overlap))
+
+def parse_sam_mix(sam_file):
+
+    sam_handle = open(sam_file)
+    map_location = {}
+
+    for line in sam_handle:
+
+        if line.startswith("@"):
+            continue
+        else:
+            fields = line.strip().split()
+            contig = fields[2]
+            pos = int(fields[3])
+            lenght = len(fields[9])
+
+        map_location[contig] = [pos, pos+lenght]
+
+    return map_location
+
+
+def mix_overlap(sam_locations, vcf_locations):
+
+    overlap = 0
+    vcf_exclusive = 0
+    contig_mismatch = 0
+
+    for chrom, pos in vcf_locations:
+
+        if chrom in sam_locations:
+            if int(pos) in range(sam_locations[chrom][0], sam_locations[chrom][1]):
+                overlap += 1
+            else:
+                print(chrom, pos)
+                print(sam_locations[chrom])
+                contig_mismatch += 1
+        else:
+            vcf_exclusive += 1
+
+    log_handle = open("mix_overlap", "w")
+
+    log_handle.write("SNPS in VCF overlap: %s\nSNPs exclusive in VCF:%s"
+                     "\nSNPs in same contig but no overlap:%s"
+                     % (overlap, vcf_exclusive, contig_mismatch))
 
 
 def parse_sam(sam_file):
@@ -181,5 +226,10 @@ def main():
         vcf1_storage = parse_vcf(infiles[0])
         vcf2_storage = parse_vcf(infiles[1])
         vcf_overlap(vcf1_storage, vcf2_storage)
+
+    elif arg.mode == "mix":
+        sam_storage = parse_sam_mix(infiles[0])
+        vcf_storage = parse_vcf(infiles[1])
+        mix_overlap(sam_storage, vcf_storage)
 
 main()
