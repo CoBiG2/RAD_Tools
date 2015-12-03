@@ -6,11 +6,11 @@
 # Usage:
 # pairLD.R vcf_input_file output_prefix
 
-library("pegas")
-library("fields")
-library("genetics")
-library("reshape2")
-library("ggplot2")
+suppressMessages(library("pegas"))
+suppressMessages(library("fields"))
+suppressMessages(library("genetics"))
+suppressMessages(library("reshape2"))
+suppressMessages(library("ggplot2"))
 
 args <- commandArgs(trailingOnly = TRUE)
 
@@ -19,23 +19,30 @@ vcf_file = args[1]
 output_prefix = args[2]
 
 # Read VCF file. Read up to 1M SNPs
-vcf <- read.vcf(vcf_file, to=1000000)
+print("Reading VCF file")
+vcf <- read.vcf(vcf_file, to=1000000, quiet=T)
 
 # Replace missing data with NA
 vcf[vcf=="./."] <- NA
 
 # Build a data frame of genotypes
+print("Building genotypes")
 geno <- makeGenotypes(data.frame(vcf))
 
 # Compute pairwise LD statistics
+print("Calculating LD")
 ldres <- LD(geno)
 
+# Save LD results into file
+save(ldres, file=paste(output_prefix, "_ldres.RData", sep=""))
+
+print("Adjusting P-values")
 # Create a new ldres slot with FDR corrected p-values
 ldres$"Q-values" <- p.adjust(ldres$"P-value", method="fdr")
 # Convert qvalues to matrix
 ldres$"Q-values" <- t(matrix(ldres$"Q-values", nrow=dim(ldres$"P-value")[1],
                              byrow=T))
-
+print("Plotting")
 # Generate heatmap plots for D', R^2, p-value and q-values
 # For D'
 pdf(paste(output_prefix, "_Dc.pdf", sep=""))
@@ -58,15 +65,13 @@ dev.off()
 Dc_hist_data <- melt(ldres$"D'")
 pdf(paste(output_prefix, "_Dc_hist.pdf", sep=""))
 g <- ggplot(Dc_hist_data, aes(x=value))
-g + xlab("D'")
-g + geom_histogram()
+g + geom_histogram() + xlab("D'")
 dev.off()
 
 R2_hist_data <- melt(ldres$"R^2")
 pdf(paste(output_prefix, "_R2_hist.pdf", sep=""))
 g <- ggplot(R2_hist_data, aes(x=value))
-g + xlab("R^2")
-g + geom_histogram()
+g + geom_histogram() + xlab("R^2")
 dev.off()
 
 # Generate plots for D' and R^2, but show only data for pairs with pvalues below
@@ -103,6 +108,3 @@ write(c(paste("Total number of pair wise comparisons: ", all_pairwise, sep=""),
         paste("Mean R2: ", R2_mean, sep=""),
         paste("Stdev R2: ", R2_stdev, sep="")),
       file=paste(output_prefix, ".log", sep=""))
-
-# Save LD results into file
-save(ldres, file="ldres.RData")
