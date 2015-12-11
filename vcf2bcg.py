@@ -74,11 +74,11 @@ def convert_vcf(vcf_file, p1, p2, h):
         elif line.strip() != "":
             fields = line.strip().split()
             # Get genotype list for p1
-            p1_geno = [fields[taxa_list.index(x)] for x in p1]
+            p1_geno = [fields[taxa_list.index(x)].split(":")[0] for x in p1]
             # Get genotype list for p2
-            p2_geno = [fields[taxa_list.index(x)] for x in p2]
+            p2_geno = [fields[taxa_list.index(x)].split(":")[0] for x in p2]
             # Get genotype list for h
-            h_geno = [fields[taxa_list.index(x)] for x in h]
+            h_geno = [fields[taxa_list.index(x)].split(":")[0] for x in h]
 
             # Write data for p1
             gen1_count = "".join(p1_geno).count("0")
@@ -95,6 +95,7 @@ def convert_vcf(vcf_file, p1, p2, h):
             # Write data for h
             hybrid_fh.write("locus_{}\npop_0\n".format(c))
             for i in h_geno:
+                print(i)
                 if [i.count("0"), i.count("1")] == [0, 0]:
                     gen = ["-9", "-9"]
                 else:
