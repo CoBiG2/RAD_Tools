@@ -22,7 +22,7 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import defaultdict
+from collections import defaultdict, Counter, OrderedDict
 
 # Setting plot style
 plt.style.use("ggplot")
@@ -42,6 +42,12 @@ parser.add_argument("--alternative-snps", dest="altsnp", const=True,
                     action="store_const", help="Parse a VCF file and plot"
                     " the distribution of the number of alternative allele"
                     " SNPs per taxa")
+parser.add_argument("--shared-snps", dest="shared", help="Plots putatively"
+                    " introgressed loci for each taxa provided in the first"
+                    " file against the taxa in the second file", nargs=2)
+parser.add_argument("--fst-vals", dest="fst_vals", help="Provide FST output"
+                    " output file from VCFtools. Required or --shared-snps"
+                    " option.")
 
 arg = parser.parse_args()
 
@@ -63,7 +69,7 @@ def weir_fst(infile, fst_threshold=None):
 
         for line in fh:
             if line.strip().split()[2] != "-nan":
-                fst = float(line.strip().split()[2])
+                fst = abs(float(line.strip().split()[2]))
                 fst_vals.append(fst)
 
                 if fst_threshold:
@@ -198,6 +204,125 @@ def alternative_snp_distribution(vcf_file):
     fig.tight_layout()
     plt.savefig("Alternative_SNPs_distribution.png")
 
+
+def parse_taxa_file(f):
+    """
+    Returns a list of taxa from a taxa file
+    """
+
+    fh = open(f)
+
+    return [x.strip() for x in fh.readlines() if x.strip() != ""]
+
+
+def parse_fst(fst_file):
+    """
+    Parses an Fst file from vcftools. Returns a dictionary with
+    the chromosome and postition as key and fst value as value
+    """
+
+    fh = open(fst_file)
+    fst_storage = {}
+
+    # Skip header
+    next(fh)
+
+    for line in fh:
+
+        if line.strip() != "":
+            fields = line.strip().split()
+            if fields[2] != "-nan":
+                fst_storage["{}_{}".format(fields[0], fields[1])] = abs(float(fields[2]))
+            else:
+                fst_storage["{}_{}".format(fields[0], fields[1])] = 0
+
+    return fst_storage
+
+
+def introgressed(vcf_file, p1, p2, fst_storage):
+    """
+    :param vcf_file: path to vcf file
+    :param p1: list, taxa to count shared polymorphisms
+    :param p2: list, reference taxa
+    """
+
+    vcf_fh = open(vcf_file)
+
+    het_taxa_storage = OrderedDict((x, 0) for x in p1)
+    hom_taxa_storage = OrderedDict((x, 0) for x in p1)
+    prop_taxa_storage = OrderedDict((x, 0) for x in p1)
+
+    # Counter of full diagnostic SNPs
+    diagnostic = 0
+
+    for line in vcf_fh:
+        if line.startswith("##"):
+            pass
+        elif line.startswith("#CHROM"):
+            taxa_list = line.strip().split()
+
+        elif line.strip() != "":
+            fields = line.strip().split()
+
+            # Get locus position
+            loc_pos = "{}_{}".format(fields[0], fields[1])
+
+            # Evaluate fst value
+            if fst_storage[loc_pos] > 0.8:
+                diagnostic += 1
+                # Get genotypes for p2
+                p2_geno = [fields[taxa_list.index(x)].split(":")[0] for x in p2]
+                # Get most common allele from p2
+                p2_al = Counter("".join(p2_geno).replace("|","").replace(".","").replace("/","")).most_common(1)[0][0]
+                # Get shared alleles for each taxa in p1
+                for taxon in p1:
+                    # Get genotype for taxon
+                    gen = fields[taxa_list.index(taxon)].split(":")[0]
+                    al_count = gen.count(p2_al)
+                    if al_count == 1:
+                        het_taxa_storage[taxon] += 1
+                    elif al_count == 2:
+                        hom_taxa_storage[taxon] += 1
+
+    for t, het, hom in zip(p1, het_taxa_storage.values(), hom_taxa_storage.values()):
+        prop_taxa_storage[t] = ((het + hom) / diagnostic) * 100
+
+    # Generate table
+    output = open("Shared_alleles.csv", "w")
+    output.write("Taxon; Shared (Heterozygous); Shared (Homozygous); %\n")
+    for t in p1:
+        output.write("{}; {}; {}; {}\n".format(t, het_taxa_storage[t],
+                                               hom_taxa_storage[t],
+                                               prop_taxa_storage[t]))
+    output.close()
+
+    # Plot bar plot with shared allele count for each taxon
+    fig, ax1 = plt.subplots()
+
+    ind = np.arange(len(p1))
+    w = 0.8
+
+    # Heterozygous data
+    het_data = [x for x in het_taxa_storage.values()]
+    # Homozygous data
+    hom_data = [x for x in hom_taxa_storage.values()]
+
+    bar1 = ax1.bar(ind, het_data, w, color="blue")
+    bar2 = ax1.bar(ind, hom_data, w, color="green", bottom=het_data)
+
+    plt.xticks(ind + w / 2., p1, rotation=45, ha="right")
+    ax1.set_xlabel("Taxa")
+    ax1.set_ylabel("Frequency")
+
+    ax2 = ax1.twinx()
+    # Percentage data
+    perc_data = [x for x in prop_taxa_storage.values()]
+    ax2.plot([x + w/2. for x in ind], perc_data, marker="+", ls="-")
+    ax2.set_ylabel("Percentage")
+
+    fig.tight_layout()
+    plt.savefig("Shared_alleles.pdf")
+
 def main():
 
     # Arguments
@@ -211,5 +336,17 @@ def main():
 
     if arg.altsnp:
         alternative_snp_distribution(infile)
+
+    if arg.shared:
+        p1_file, p2_file = arg.shared[0], arg.shared[1]
+        fst_file = arg.fst_vals
+
+        # Parse taxa files
+        p1 = parse_taxa_file(p1_file)
+        p2 = parse_taxa_file(p2_file)
+        fst = parse_fst(fst_file)
+
+        # Get introgressed loci
+        introgressed(infile, p1, p2, fst)
 
 main()
