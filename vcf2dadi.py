@@ -57,7 +57,7 @@ def get_data_from_vcf(vcf_file, pops_dic):
         ref_allele = record.alleles[0]
         alt_allele = str(record.alleles[1])
 
-	# Get allele counts for populations
+		# Get allele counts for populations
         pop_ref_counts = dict((x, 0) for x in pops_dic)
         pop_alt_counts = dict((x, 0) for x in pops_dic)
 
@@ -77,13 +77,14 @@ def get_data_from_vcf(vcf_file, pops_dic):
 
         # Create line record
         ref_snippet = "-{}-".format(ref_allele)
+        alt_snippet = "-{}-".format(alt_allele)
 
-        line_record = [ref_snippet, ref_snippet, ref_allele] + list([str(x) for x in pop_ref_counts.values()]) + [alt_allele] + list([str(x) for x in pop_alt_counts.values()]) + [str(record.CHROM), str(record.POS)]
+        line_record = [ref_snippet, alt_snippet, ref_allele] + list([str(x) for x in pop_ref_counts.values()]) + [alt_allele] + list([str(x) for x in pop_alt_counts.values()]) + [str(record.CHROM), str(record.POS)]
 
         storage.append(line_record)
 
     return storage
-        
+
 
 def write_snp_file(records, output_file):
     """
