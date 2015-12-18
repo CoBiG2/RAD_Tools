@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 
 # pairwise_ld.py. Calculates the D' and r2 values for each SNP pair in a VCF file
@@ -16,6 +16,7 @@ parser = argparse.ArgumentParser(description="Comparison of RAD assemblies "
 
 parser.add_argument("-vcf", dest="vcf_infile", help="Provide VCF "
                     " file.", required=True)
+parser.add_argument("-o", dest="outfile", help="Output file prefix")
 
 arg = parser.parse_args()
 
@@ -26,7 +27,7 @@ def parse_vcf(vcf_file):
     """
 
     genotypes = []
-    x= 0
+    x = 0
     vcf_handle = open(vcf_file)
 
     for line in vcf_handle:
@@ -42,7 +43,7 @@ def parse_vcf(vcf_file):
 
             if len(ref_snp) > 1 or len(alt_snp) > 1:
                 continue
-            
+
             # This will add something like ["00", "01", "11", "01", "00"]
             gen = ["".join(x.split(":")[0].split("/")) if x != "./." else ".." for x in fields[9:]]
             genotypes.append((x, gen))
@@ -51,19 +52,27 @@ def parse_vcf(vcf_file):
     return genotypes
 
 
-def compute_pairwise_ld(genotype_list):
+def compute_pairwise_ld(genotype_list, outprefix):
     """
-    Computes a triangular matrix for D' and r2 for each combinaiton in genotype_list
+    Computes a triangular matrix for D' and r2 for each combinaiton in
+    genotype_list
     """
 
-    D_matrix = numpy.empty((len(genotype_list), len(genotype_list)), dtype=float)
-    r2_matrix = numpy.empty((len(genotype_list), len(genotype_list)), dtype=float)
+    D_matrix = numpy.empty((len(genotype_list), len(genotype_list)),
+                           dtype=float)
+    r2_matrix = numpy.empty((len(genotype_list), len(genotype_list)),
+                            dtype=float)
 
+    total_pairs = 0
     n = 0
+    ld_significant = 0
+    ld_nonsignificant = 0
     Dvals = []
     r2vals = []
 
     for gen_l1, gen_l2 in itertools.combinations(genotype_list, 2):
+
+        total_pairs += 1
 
         pos1 = gen_l1[0]
         pos2 = gen_l2[0]
@@ -120,6 +129,11 @@ def compute_pairwise_ld(genotype_list):
 
         chi2 = chisquare(obs_list, exp_list, 1)
 
+        if chi2[0] <= 0.05:
+            ld_significant += 1
+        else:
+            ld_nonsignificant += 1
+
         # Quantification of LD
         # Frequencies of genotypes
         freq_00 = float(gen_counts["00"] / total_alleles)
@@ -151,8 +165,17 @@ def compute_pairwise_ld(genotype_list):
         D_matrix[pos1][pos2] = Dr
         r2_matrix[pos1][pos2] = r2
 
-    print("Mean D' value of {} +- {}".format(numpy.mean(Dvals), numpy.std(Dvals)))
-    print("Mean r2 value of {} +- {}".format(numpy.mean(r2vals), numpy.std(r2vals)))
+    # Write log files
+    log_fh = open("pairwise_ld.log", "w")
+
+    # Write mean D' value
+    log_fh.write("Mean D' value of {} +- {}".format(numpy.mean(Dvals),
+                 numpy.std(Dvals)))
+    log_fh.write("Mean r2 value of {} +- {}".format(numpy.mean(r2vals),
+                 numpy.std(r2vals)))
+    log_fh.write("LD was significantly detected in {} SNP pairs ({}%)".format(
+                 ld_significant, (float(ld_significant) / float(total_pairs)) * 100
+    ))
 
     # Plot D' and r2
     fix, ax = plt.subplots()
@@ -161,24 +184,23 @@ def compute_pairwise_ld(genotype_list):
     cbar = plt.colorbar(heat1)
     cbar.set_label("D'")
 
-    plt.savefig("test.png")
+    plt.savefig("{}_LD.png".format(outprefix))
     plt.close()
-
-    print(n)
 
     fig, ax = plt.subplots()
 
     hist = plt.hist(Dvals, bins=20)
 
-    plt.savefig("hist.png")
+    plt.savefig("{}_hist.png".format(outprefix))
 
 
 
 def main():
     # Args
     vcf_file = arg.vcf_infile
+    out_prefix = arg.outfile
 
     storage = parse_vcf(vcf_file)
-    compute_pairwise_ld(storage)
+    compute_pairwise_ld(storage, out_prefix)
 
 main()
