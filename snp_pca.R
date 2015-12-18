@@ -38,6 +38,7 @@ if (!is.na(pops_file)) {
     EV1 = pca$eigenvect[,1],
     EV2 = pca$eigenvect[,2],
     stringsAsFactors=F)
+  save(tab, file=paste(output_name, ".Rdata", sep=""))
   plot(tab$EV1, tab$EV2, col=as.integer(tab$pop), xlab="eigenvector 1",
     ylab="eigenvector 2")
   legend("bottomright", legend=levels(tab$pop), pch="o", col=1:nlevels(tab$pop))
