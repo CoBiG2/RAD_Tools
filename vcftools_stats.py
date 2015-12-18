@@ -48,6 +48,9 @@ parser.add_argument("--shared-snps", dest="shared", help="Plots putatively"
 parser.add_argument("--fst-vals", dest="fst_vals", help="Provide FST output"
                     " output file from VCFtools. Required or --shared-snps"
                     " option.")
+parser.add_argument("--remove-int", dest="remove_int", const=True,
+                    action="store_const", help="Use this option to create a new"
+                    " vcf file without the putatively introgressed loci")
 
 arg = parser.parse_args()
 
@@ -248,6 +251,9 @@ def introgressed(vcf_file, p1, p2, fst_storage):
 
     vcf_fh = open(vcf_file)
 
+    if arg.remove_int:
+        filtered_vcf = open(vcf_file.split(".")[0] + "_filtered.vcf", "w")
+
     het_taxa_storage = OrderedDict((x, 0) for x in p1)
     hom_taxa_storage = OrderedDict((x, 0) for x in p1)
     prop_taxa_storage = OrderedDict((x, 0) for x in p1)
@@ -255,10 +261,20 @@ def introgressed(vcf_file, p1, p2, fst_storage):
     # Counter of full diagnostic SNPs
     diagnostic = 0
 
+    # Variable that will determine whether the current SNP is to be filtered
+    # (False) or not (True)
+    flag = True
+
     for line in vcf_fh:
         if line.startswith("##"):
-            pass
+            if arg.remove_int:
+                filtered_vcf.write(line)
+            else:
+                pass
         elif line.startswith("#CHROM"):
+            if arg.remove_int:
+                filtered_vcf.write(line)
+
             taxa_list = line.strip().split()
 
         elif line.strip() != "":
@@ -280,9 +296,19 @@ def introgressed(vcf_file, p1, p2, fst_storage):
                     gen = fields[taxa_list.index(taxon)].split(":")[0]
                     al_count = gen.count(p2_al)
                     if al_count == 1:
+                        # For shared Heterozygous SNPs set flag so that they
+                        # are filtered from the VCF
+                        flag = False
                         het_taxa_storage[taxon] += 1
                     elif al_count == 2:
                         hom_taxa_storage[taxon] += 1
+
+            if flag and arg.remove_int:
+                filtered_vcf.write(line)
+
+            # Reset flag value for next iteration
+            flag = True
+
 
     for t, het, hom in zip(p1, het_taxa_storage.values(), hom_taxa_storage.values()):
         prop_taxa_storage[t] = ((het + hom) / diagnostic) * 100
