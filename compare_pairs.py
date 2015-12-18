@@ -178,7 +178,7 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
         # Start parsing contents of VCF file for each pair. Most statistics,
         # with the exception of the snp_mismatch and snp_number will only be
         # updated when the locus number changes.
-        else:
+        elif line.strip() != "":
             fields = [x.strip() for x in line.split("\t")]
             # Get locus number
             if fields[0] != "un":
