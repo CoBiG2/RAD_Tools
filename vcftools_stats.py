@@ -51,6 +51,12 @@ parser.add_argument("--fst-vals", dest="fst_vals", help="Provide FST output"
 parser.add_argument("--remove-int", dest="remove_int", const=True,
                     action="store_const", help="Use this option to create a new"
                     " vcf file without the putatively introgressed loci")
+parser.add_argument("--filter-fst", dest="filter_fst", nargs="+", help="Filter"
+                    " a vcf file provided in '-in' according to the fst values"
+                    " provided in '--fst-vals' tha fall between the values"
+                    " provided in this option (e.g. '--filter-fst 0.8 1')."
+                    " Alternatively, only one value can be provided and Only"
+                    " the SNPs with that exact FST value are saved.")
 
 arg = parser.parse_args()
 
@@ -218,10 +224,11 @@ def parse_taxa_file(f):
     return [x.strip() for x in fh.readlines() if x.strip() != ""]
 
 
-def parse_fst(fst_file):
+def parse_fst(fst_file, fst_range=None):
     """
     Parses an Fst file from vcftools. Returns a dictionary with
-    the chromosome and postition as key and fst value as value
+    the chromosome and postition as key and fst value as value. If he fst_range
+    argument is provided, it will only store SNPs within the fst_range
     """
 
     fh = open(fst_file)
@@ -235,11 +242,42 @@ def parse_fst(fst_file):
         if line.strip() != "":
             fields = line.strip().split()
             if fields[2] != "-nan":
-                fst_storage["{}_{}".format(fields[0], fields[1])] = abs(float(fields[2]))
+                fst = abs(float(fields[2]))
+                if fst_range:
+                    if len(fst_range) == 1 and fst == float(fst_range[0]):
+                        fst_storage["{}_{}".format(fields[0], fields[1])] = fst
+                    else:
+                        if float(fst_range[0]) <= fst <= float(fst_range[1]):
+                            fst_storage["{}_{}".format(fields[0], fields[1])] = fst
             else:
-                fst_storage["{}_{}".format(fields[0], fields[1])] = 0
+                # Only save SNPs with -nan when the fst_range is not specified
+                if not fst_range:
+                    fst_storage["{}_{}".format(fields[0], fields[1])] = 0
 
     return fst_storage
+
+
+def filter_fst(vcf_file, fst_storage):
+    """
+    Filters a vcf_file so that it includes only the SNPs from the fst_storage
+    """
+
+    vcf_fh = open(vcf_file)
+    out_vcf = open(vcf_file.split(".")[0] + "_filtered.vcf", "w")
+
+    for line in vcf_fh:
+        if line.startswith("#"):
+            out_vcf.write(line)
+        elif line.strip() != "":
+            fields = line.split()
+            # Get chrom and position
+            coord = "{}_{}".format(fields[0], fields[1])
+
+            if coord in fst_storage:
+                out_vcf.write(line)
+
+    vcf_fh.close()
+    out_vcf.close()
 
 
 def introgressed(vcf_file, p1, p2, fst_storage):
@@ -374,5 +412,9 @@ def main():
 
         # Get introgressed loci
         introgressed(infile, p1, p2, fst)
+
+    if arg.filter_fst:
+        fst_storage = parse_fst(arg.fst_vals, arg.filter_fst)
+        filter_fst(arg.infile, fst_storage)
 
 main()
