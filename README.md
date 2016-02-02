@@ -1,6 +1,6 @@
 # RAD Tools
 
-This repository contains several tools built by CoBiG² members to help us dead with RAD and GBS data.
+This repository contains several tools built by CoBiG² members to help us deal with RAD and GBS data.
 The existing tools are mentioned below.
 
 
