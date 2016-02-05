@@ -75,6 +75,9 @@ def new_phylip_writer(columns, infile_name):
 
 
 def main(infile_name):
+    """
+    Main function. Runs all the others, based on the given input file name.
+    """
     all_cols = read_phylip(infile_name)
     new_cols = singleton_remover(all_cols)
     new_phylip_writer(new_cols, infile_name)
