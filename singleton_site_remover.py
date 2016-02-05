@@ -82,6 +82,7 @@ def main(infile_name):
     new_cols = singleton_remover(all_cols)
     new_phylip_writer(new_cols, infile_name)
 
+
 if __name__ == "__main__":
     # Usage: python2 singleton_site_remover.py infile.phy
     from sys import argv
