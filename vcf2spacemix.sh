@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Usage: bash vcf2sapcemix.sh file.vcf
+# Outpus will be saved in the same location as the vcf file, with ".counts" and ".sizes" appended to the filename.
+# This script requires vcftools. https://github.com/vcftools/vcftools
+
 set -e
 
 vcffile=${1}
