@@ -78,7 +78,7 @@ def weir_fst(infile, fst_threshold=None):
 
         for line in fh:
             if line.strip().split()[2] != "-nan":
-                fst = abs(float(line.strip().split()[2]))
+                fst = float(line.strip().split()[2])
                 fst_vals.append(fst)
 
                 if fst_threshold:
@@ -242,7 +242,7 @@ def parse_fst(fst_file, fst_range=None):
         if line.strip() != "":
             fields = line.strip().split()
             if fields[2] != "-nan":
-                fst = abs(float(fields[2]))
+                fst = float(fields[2])
                 if fst_range:
                     if len(fst_range) == 1 and fst == float(fst_range[0]):
                         fst_storage["{}_{}".format(fields[0], fields[1])] = fst
