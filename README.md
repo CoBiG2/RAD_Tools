@@ -1,6 +1,6 @@
 # RAD Tools
 
-This repository contains several tools built by CoBiG² members to help us dead with RAD and GBS data.
+This repository contains several tools built by CoBiG² members to help us deal with RAD and GBS data.
 The existing tools are mentioned below.
 
 
@@ -43,6 +43,14 @@ A simple script to look mine the data files produced by Bayenv2. It will look fo
 ## filter_loci_by_vcf.py
 
 This script will discard any information in a .loci file that is not referenced in the provided vcf file.
+
+## singleton_site_remover.py
+
+This script will remove any singleton sites from a "phylip" formatted file.
+Takes one argument - the phylip file. The output will be written to a new file
+which has the same name as the original, but with the prefix
+"_no_singletons.phy".
+
 
 ## License
 
