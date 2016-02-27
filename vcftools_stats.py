@@ -23,6 +23,7 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict, Counter, OrderedDict
+import itertools
 
 # Setting plot style
 plt.style.use("ggplot")
@@ -249,6 +250,8 @@ def parse_fst(fst_file, fst_range=None):
                     else:
                         if float(fst_range[0]) <= fst <= float(fst_range[1]):
                             fst_storage["{}_{}".format(fields[0], fields[1])] = fst
+                else:
+                    fst_storage["{}_{}".format(fields[0], fields[1])] = fst
             else:
                 # Only save SNPs with -nan when the fst_range is not specified
                 if not fst_range:
@@ -296,6 +299,10 @@ def introgressed(vcf_file, p1, p2, fst_storage):
     hom_taxa_storage = OrderedDict((x, 0) for x in p1)
     prop_taxa_storage = OrderedDict((x, 0) for x in p1)
 
+    chrom_vals = OrderedDict((x, {}) for x in p1)
+
+    introgressed_chroms = OrderedDict((x, []) for x in p1)
+
     # Counter of full diagnostic SNPs
     diagnostic = 0
 
@@ -330,6 +337,8 @@ def introgressed(vcf_file, p1, p2, fst_storage):
                 p2_al = Counter("".join(p2_geno).replace("|","").replace(".","").replace("/","")).most_common(1)[0][0]
                 # Get shared alleles for each taxa in p1
                 for taxon in p1:
+                    if fields[0] not in chrom_vals[taxon]:
+                        chrom_vals[taxon][fields[0]] = []
                     # Get genotype for taxon
                     gen = fields[taxa_list.index(taxon)].split(":")[0]
                     al_count = gen.count(p2_al)
@@ -338,8 +347,14 @@ def introgressed(vcf_file, p1, p2, fst_storage):
                         # are filtered from the VCF
                         flag = False
                         het_taxa_storage[taxon] += 1
+                        chrom_vals[taxon][fields[0]].append(1)
+                        introgressed_chroms[taxon].append(fields[0])
                     elif al_count == 2:
                         hom_taxa_storage[taxon] += 1
+                        chrom_vals[taxon][fields[0]].append(1)
+                        introgressed_chroms[taxon].append(fields[0])
+                    else:
+                        chrom_vals[taxon][fields[0]].append(0)
 
             if flag and arg.remove_int:
                 filtered_vcf.write(line)
@@ -347,6 +362,56 @@ def introgressed(vcf_file, p1, p2, fst_storage):
             # Reset flag value for next iteration
             flag = True
 
+    # This piece of code is highly ad-hoc to the three Hv taxa with putatively
+    # introgressed signals.
+    try:
+        from matplotlib_venn import venn3
+
+        venn3([set(introgressed_chroms["999pu1_3"]),
+               set(introgressed_chroms["3624_1"]),
+               set(introgressed_chroms["2377pu1_2"])],
+              ["999pu1_3", "3624_1", "2377pu1_2"])
+        plt.savefig("introgressed_venn.pdf")
+
+        shared_tb = open("shared_int.csv", "w")
+        for comb in itertools.combinations(["999pu1_3", "3624_1", "2377pu1_2"], 2):
+            s1 = set(introgressed_chroms[comb[0]])
+            s2 = set(introgressed_chroms[comb[1]])
+            shared = s1.intersection(s2)
+            unique1 = s1.difference(s2)
+            unique2 = s2.difference(s1)
+
+            shared_tb.write("Combination {}-{}\n".format(comb[0], comb[1]))
+            shared_tb.write("Shared: {}\nUnique {}: {}\nUnique {}: {}\n".format(
+                len(shared), comb[0], len(unique1), comb[1], len(unique2)
+            ))
+
+        shared_tb.close()
+
+    except:
+        pass
+
+    # Writes to a tabular file the number and proportions of SNPs in the same
+    # chromosome that match the signal to each other
+    chrom_tb = open("chromosome_match.csv", "w")
+    chrom_tb.write("Taxon; Total; Match;%; Mismatch;%;\n")
+
+    for taxon in chrom_vals:
+        total = 0
+        match = 0
+        mismatch = 0
+        for val in chrom_vals[taxon].values():
+            if len(val) > 1:
+                total += 1
+                if len(set(val)) == 1:
+                    match += 1
+                else:
+                    mismatch += 1
+        chrom_tb.write("{};{};{};{};{};{}\n".format(
+            taxon, total, match, (float(match)/float(total))*100,
+            mismatch, (float(mismatch)/float(total))*100))
+
+    chrom_tb.close()
 
     for t, het, hom in zip(p1, het_taxa_storage.values(), hom_taxa_storage.values()):
         prop_taxa_storage[t] = ((het + hom) / diagnostic) * 100
