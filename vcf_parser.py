@@ -27,6 +27,9 @@ parser.add_argument("--remove-inv", dest="remove_inv", const=True,
                     action="store_const", help="Filters invariable SNP sites"
                     " from the VCF file (These sites may occurr when "
                     "individuals are removed from a VCF file).")
+parser.add_argument("--one-snp", dest="one_snp", const=True,
+                    action="store_const", help="Filters the VCF file so that"
+                    " only one SNP per locus is retained - The first one")
 
 arg = parser.parse_args()
 
@@ -55,6 +58,32 @@ def remove_invariable(vcf_file):
                     vcf_out.write(line)
 
 
+def filter_one_snp(vcf_file):
+    """
+    Filters a VCF file so that only one SNP per locus (the first) is retained
+    """
+
+    vcf_output = vcf_file.split(".")[0] + "OneSNP.vcf"
+
+    chrom_list = []
+
+    with open(vcf_file) as vcf_handle, open(vcf_output, "w") as vcf_out:
+
+        for line in vcf_handle:
+
+            if line.startswith("#"):
+                vcf_out.write(line)
+
+            elif line.strip() != "":
+
+                # Get chrom number
+                chrom = line.split()[0]
+
+                if chrom not in chrom_list:
+                    vcf_out.write(line)
+                    chrom_list.append(chrom)
+
+
 def main():
 
     # Args
@@ -62,5 +91,8 @@ def main():
 
     if arg.remove_inv:
         remove_invariable(vcf_file)
+
+    if arg.one_snp:
+        filter_one_snp(vcf_file)
 
 main()
