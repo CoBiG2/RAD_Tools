@@ -18,20 +18,24 @@
 # a VCF file that are not possible with vcftools
 
 import argparse
+import random
 
-parser = argparse.ArgumentParser(description="Filtering of VCF files")
+PARSER = argparse.ArgumentParser(description="Filtering of VCF files")
 
-parser.add_argument("-vcf", dest="vcf_infile", help="Provide VCF "
+PARSER.add_argument("-vcf", dest="vcf_infile", help="Provide VCF "
                     " file(s).", required=True)
-parser.add_argument("--remove-inv", dest="remove_inv", const=True,
+PARSER.add_argument("--remove-inv", dest="remove_inv", const=True,
                     action="store_const", help="Filters invariable SNP sites"
                     " from the VCF file (These sites may occurr when "
                     "individuals are removed from a VCF file).")
-parser.add_argument("--one-snp", dest="one_snp", const=True,
+PARSER.add_argument("--one-snp", dest="one_snp", const=True,
                     action="store_const", help="Filters the VCF file so that"
                     " only one SNP per locus is retained - The first one")
+PARSER.add_argument("--random-snp", dest="rnd_snp", const=True,
+                    action="store_const", help="Filters the VCF file so that"
+                    " only one random SNP per locus is retained.")
 
-arg = parser.parse_args()
+ARG = PARSER.parse_args()
 
 def remove_invariable(vcf_file):
     """
@@ -84,15 +88,54 @@ def filter_one_snp(vcf_file):
                     chrom_list.append(chrom)
 
 
+def filter_random_snp(vcf_file):
+    """
+    Filters a VCF file so that only one random SNP per locus is retained.
+    """
+
+    vcf_output = vcf_file.split(".")[0] + "RandSNP.vcf"
+
+    current_chrom = 0
+    loci_snps = []
+
+    with open(vcf_file) as vcf_handle, open(vcf_output, "w") as vcf_out:
+
+        for line in vcf_handle:
+
+            if line.startswith("#"):
+                vcf_out.write(line)
+
+            elif line.strip() != "":
+
+                # Get chrom number
+                chrom = int(line.split()[0])
+
+                if chrom != current_chrom and loci_snps != []:
+                    choosen = random.choice(loci_snps)
+                    vcf_out.write(choosen)
+                    loci_snps = [line]
+                    current_chrom = chrom
+
+                else:
+                    loci_snps += [line]
+        vcf_out.write(random.choice(loci_snps))
+
+
 def main():
-
+    """
+    Main function that controls what to do.
+    """
     # Args
-    vcf_file = arg.vcf_infile
+    vcf_file = ARG.vcf_infile
 
-    if arg.remove_inv:
+    if ARG.remove_inv:
         remove_invariable(vcf_file)
 
-    if arg.one_snp:
+    if ARG.one_snp:
         filter_one_snp(vcf_file)
+
+    if ARG.rnd_snp:
+        filter_random_snp(vcf_file)
+
 
 main()
