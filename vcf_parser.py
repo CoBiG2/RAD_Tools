@@ -19,6 +19,7 @@
 
 import argparse
 import random
+from collections import Counter
 
 PARSER = argparse.ArgumentParser(description="Filtering of VCF files")
 
@@ -28,6 +29,9 @@ PARSER.add_argument("--remove-inv", dest="remove_inv", const=True,
                     action="store_const", help="Filters invariable SNP sites"
                     " from the VCF file (These sites may occurr when "
                     "individuals are removed from a VCF file).")
+PARSER.add_argument("--remove-singletons", dest="remove_singletons", const=True,
+                    action="store_const", help="Filters singletons SNP sites"
+                    " from the VCF file.")
 PARSER.add_argument("--one-snp", dest="one_snp", const=True,
                     action="store_const", help="Filters the VCF file so that"
                     " only one SNP per locus is retained - The first one")
@@ -37,13 +41,19 @@ PARSER.add_argument("--random-snp", dest="rnd_snp", const=True,
 
 ARG = PARSER.parse_args()
 
-def remove_invariable(vcf_file):
+def remove_sites(vcf_file, mode="inv", suffix="_NoInv.vcf"):
     """
     Removes invariable sites from a VCF file. This assumes that the genotype
     columns start at the 10th column until the last column
+    :param vcf_file: string, path to vcf file
+    :param mode: string, specifies the removal operation. May be one of the
+    following:
+        .:"inv": Removes invariable sites
+        .:"singletons": Removes singleton sites
+    :param suffix: string, the suffix of the output file.
     """
 
-    vcf_output = vcf_file.split(".")[0] + "_NoInv.vcf"
+    vcf_output = vcf_file.split(".")[0] + suffix
 
     with open(vcf_file) as vcf_handle, open(vcf_output, "w") as vcf_out:
 
@@ -57,9 +67,18 @@ def remove_invariable(vcf_file):
                 # Get genotypes. Remove genotypes with no data.
                 genotypes = [x.split(":")[0] for x in line.split()[9:] if x.split(":")[0] != "./."]
 
-                # If number of unique genotypes higher than 1, save SNP
-                if len(set(genotypes)) > 1:
-                    vcf_out.write(line)
+                if mode == "inv":
+                    # If number of unique genotypes higher than 1, save SNP
+                    if len(set(genotypes)) > 1:
+                        vcf_out.write(line)
+
+                elif mode == "singletons":
+                    gens = Counter(genotypes)
+                    # Remove most common genotype
+                    del gens[gens.most_common()[0][0]]
+                    # Check if remaining genotype count is higher than 1
+                    if sum(gens.values()) > 1:
+                        vcf_out.write(line)
 
 
 def filter_one_snp(vcf_file):
@@ -129,7 +148,10 @@ def main():
     vcf_file = ARG.vcf_infile
 
     if ARG.remove_inv:
-        remove_invariable(vcf_file)
+        remove_sites(vcf_file)
+
+    if ARG.remove_singletons:
+        remove_sites(vcf_file, mode="singletons", suffix="_NoSing.vcf")
 
     if ARG.one_snp:
         filter_one_snp(vcf_file)
