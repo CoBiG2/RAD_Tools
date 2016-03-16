@@ -17,6 +17,8 @@
 # vcf_parser.py is that performs filtering and transformations steps on
 # a VCF file that are not possible with vcftools
 
+# Usage: python3 vcf_parser.py -h (will show all available options)
+
 import argparse
 import random
 
