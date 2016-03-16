@@ -34,6 +34,9 @@ PARSER.add_argument("--one-snp", dest="one_snp", const=True,
 PARSER.add_argument("--random-snp", dest="rnd_snp", const=True,
                     action="store_const", help="Filters the VCF file so that"
                     " only one random SNP per locus is retained.")
+PARSER.add_argument("--center-snp", dest="center_snp", const=True,
+                    action="store_const", help="Filters the VCF file so that"
+                    " only the SNP closest to the locus center is retained.")
 
 ARG = PARSER.parse_args()
 
@@ -121,6 +124,49 @@ def filter_random_snp(vcf_file):
         vcf_out.write(random.choice(loci_snps))
 
 
+def filter_center_snp(vcf_file):
+    """
+    Filters a VCF file so that only one SNP per locus (the first) is retained
+    """
+
+    vcf_output = vcf_file.split(".")[0] + "CenterSNP.vcf"
+
+    current_chrom = ""
+    line_list = []
+
+    with open(vcf_file) as vcf_handle, open(vcf_output, "w") as vcf_out:
+
+        for line in vcf_handle:
+
+            if line.startswith("#"):
+                vcf_out.write(line)
+
+            elif line.strip() != "":
+
+                # Get chrom number
+                chrom = line.split()[0]
+
+                # Get SNP position
+                pos = int(line.split()[1])
+
+                if chrom != current_chrom and current_chrom != "":
+                    closest = min(pos_list, key=lambda x: abs(x - 45))
+                    vcf_out.write(line_list[pos_list.index(closest)])
+                    pos_list = [pos]
+                    line_list = [line]
+                    current_chrom = chrom
+                elif chrom != current_chrom:
+                    pos_list = [pos]
+                    line_list = [line]
+                    current_chrom = chrom
+                else:
+                    pos_list += [pos]
+                    line_list += [line]
+
+        closest = min(pos_list, key=lambda x: abs(x - 45))
+        vcf_out.write(line_list[pos_list.index(closest)])
+
+
 def main():
     """
     Main function that controls what to do.
@@ -137,5 +183,7 @@ def main():
     if ARG.rnd_snp:
         filter_random_snp(vcf_file)
 
+    if ARG.center_snp:
+        filter_center_snp(vcf_file)
 
 main()
