@@ -105,9 +105,12 @@ print("Writing significant SNP pairs")
 snp_coord <- which(ldres$"Q-values" <= 0.05, arr.ind=TRUE)
 # Convert SNPs pairs coordinates into the actual chromosome and position
 snp_pairs <- t(apply(snp_coord, 1, function(r) c(vcf_info$CHROM[r[1]],
-  vcf_info$POS[r[1]], vcf_info$CHROM[r[2]], vcf_info$POS[r[2]])))
+  vcf_info$POS[r[1]], vcf_info$CHROM[r[2]], vcf_info$POS[r[2]], ldres$"R^2"[r[1], r[2]], ldres$"D'"[r[1], r[2]])))
+
 # Write pairs of SNPs with significant LD into csv
-write.matrix(snp_pairs, file="Significant_snp_pairs.csv", sep=";")
+table_data <- matrix(c("CHROM1", "POS1", "CHROM2", "POS2", "R^2", "D'"), ncol=6)
+table_data <- rbind(table_data, snp_pairs)
+write.matrix(table_data, file="Significant_snp_pairs.csv", sep=";")
 
 # Write info to file
 write(c(paste("Total number of pair wise comparisons: ", all_pairwise, sep=""),
