@@ -333,7 +333,7 @@ def plot_single_assembly(total_loci, stats, output_name):
     snp_error_rate = tuple((x, float(y["snp_mismatch"]) /
                             float(y["snp_number"])) for x, y in stats.items())
 
-    titles = ["Total locus error", "Partial locus error", "Allele error",
+    titles = ["Total locus error", "Partial locus error", "Haplotype error",
               "SNP error"]
 
     # Gather plot data
@@ -378,7 +378,7 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name,
     # Data storage for quick ploting
     data = OrderedDict([("Total locus error", []),
                         ("Partial locus error", []),
-                        ("Allele error", []),
+                        ("Haplotype error", []),
                         ("SNP error", [])])
     assemblies = []
 
@@ -404,7 +404,7 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name,
         # Allele error rate
         allele_error_rate = [float(x["allele_mismatch"]) /
                              float(x["total_allele"]) for x in stats.values()]
-        data["Allele error"].append(allele_error_rate)
+        data["Haplotype error"].append(allele_error_rate)
 
         # SNP error rate
         snp_error_rate = [float(x["snp_mismatch"]) / float(x["snp_number"])
@@ -437,7 +437,7 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name,
 
     if create_table:
         table_handle.write("\nAssembly; Total locus error; Partial locus error"
-                           "; Allele error; SNP error\n")
+                           "; Haplotype error; SNP error\n")
         for aname, vals in zip(assemblies, [x for x in zip(*assembly_means)]):
             table_handle.write("{}; {}\n".format(aname,
                                             ";".join([str(x) for x in vals])))
