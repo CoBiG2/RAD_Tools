@@ -51,6 +51,9 @@ Takes one argument - the phylip file. The output will be written to a new file
 which has the same name as the original, but with the prefix
 "_no_singletons.phy".
 
+## geste2baypass.py
+
+This script will convert a file from the GESTE format to Baypass input.
 
 ## License
 
