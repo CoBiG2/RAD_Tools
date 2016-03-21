@@ -23,6 +23,8 @@ import itertools
 import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
+from scipy.stats import f_oneway
+from scipy.stats import kruskal
 
 parser = argparse.ArgumentParser(description="Comparison of RAD assemblies "
                                              "using technical replicates")
@@ -380,6 +382,7 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name,
                         ("Partial locus error", []),
                         ("Haplotype error", []),
                         ("SNP error", [])])
+
     assemblies = []
 
     if create_table:
@@ -410,6 +413,11 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name,
         snp_error_rate = [float(x["snp_mismatch"]) / float(x["snp_number"])
                           for x in stats.values()]
         data["SNP error"].append(snp_error_rate)
+
+    # Perform one way anova for each rate
+    for aname, vals in data.items():
+        res = kruskal(*[np.array(x) for x in vals])
+        print(aname, res)
 
     for (k, val), a in zip(data.items(), [x for y in ax for x in y]):
         # Creating plot
