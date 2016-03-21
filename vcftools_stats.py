@@ -24,6 +24,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict, Counter, OrderedDict
 import itertools
+import statsmodels.sandbox.stats.multicomp as multi_correction
+
 
 # Setting plot style
 plt.style.use("ggplot")
@@ -58,6 +60,11 @@ parser.add_argument("--filter-fst", dest="filter_fst", nargs="+", help="Filter"
                     " provided in this option (e.g. '--filter-fst 0.8 1')."
                     " Alternatively, only one value can be provided and Only"
                     " the SNPs with that exact FST value are saved.")
+parser.add_argument("--hwe", dest="hwe", help="Parse a hardy-weinberg .hardy"
+                    " output file. Provide a threshold for the q-value")
+parser.add_argument("--filter-hwe", dest="filter_hwe", help="Filters a vcf file"
+                    " according to the hardy-weinberg .hardy file. The p-values"
+                    " of the hwe test are corrected with a FDR approach.")
 
 arg = parser.parse_args()
 
@@ -107,6 +114,51 @@ def weir_fst(infile, fst_threshold=None):
 
     f.tight_layout()
     plt.savefig("fst_vals.png")
+
+
+def parse_hwe(f, alpha, vcf_file):
+    """
+    Parses a hardy-weinberg output file, corrects p-values according to a FDR
+    and generates several plots to visualize the hwe results
+    """
+
+    vcf_outfile = vcf_file.split(".")[0] + "_filtered.vcf"
+
+    snp_pos = []
+    pvals = []
+    het_deficit = []
+    het_excess = []
+
+    with open(f) as fh:
+        #Skip header
+        next(fh)
+
+        for line in fh:
+            fields = line.strip().split()
+            snp_pos.append((fields[0], fields[1]))
+            pvals.append(float(fields[5]))
+            het_deficit.append(float(fields[6]))
+            het_excess.append(float(fields[7]))
+
+    fdr_bool_list, fdr_pvalue_list, alpha_S, alpha_B = \
+        multi_correction.multipletests(pvals, alpha=float(alpha),
+                                       method="fdr_bh")
+
+    snp_pvals = OrderedDict()
+    for pos, pval in zip(snp_pos, fdr_pvalue_list):
+        snp_pvals["-".join(pos)] = pval
+
+    with open(vcf_file) as vcf_fh, open(vcf_outfile, "w") as ofh:
+        for line in vcf_file:
+            if line.startswith("#"):
+                ofh.write(line)
+            elif line.strip() != "":
+                fields = line.split()
+                # Check pval for locus
+                pos = "-".join(fields[0], fields[1])
+                if snp_pvals[pos] <= 0.05:
+                    ofh.write(line)
+
 
 
 def singletons(infile):
@@ -481,5 +533,8 @@ def main():
     if arg.filter_fst:
         fst_storage = parse_fst(arg.fst_vals, arg.filter_fst)
         filter_fst(arg.infile, fst_storage)
+
+    if arg.hwe:
+        parse_hwe(infile, arg.hwe)
 
 main()
