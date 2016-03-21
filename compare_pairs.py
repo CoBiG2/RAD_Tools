@@ -282,7 +282,7 @@ def compare_pairs(vcf_file, pairs, filt_vcf=False):
 
     print(total_chromossomes)
 
-    return total_loci, pair_statistics
+    return total_loci, pair_statistics, total_loci
 
 
 def plot_single_assembly(total_loci, stats, output_name):
@@ -353,7 +353,7 @@ def plot_single_assembly(total_loci, stats, output_name):
 
 
 def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name,
-                             create_table=True):
+                             create_table=True, total_snps=None):
     """
     This function plots the four error rates for each assembly stats provided
     by the multi_stats argument. It calculates the mean error for each error
@@ -413,9 +413,19 @@ def plot_multiple_assemblies(multi_total_loci, multi_stats, plot_name,
 
     for (k, val), a in zip(data.items(), [x for y in ax for x in y]):
         # Creating plot
+        if total_snps:
+            a2 = a.twinx()
+            a2.plot([x + 1 for x in range(len(total_snps))], total_snps,
+                    lw=1.5, color="green", alpha=.3)
+            a2.set_ylabel("SNPs")
+            for t1 in a2.get_yticklabels():
+                t1.set_color("green")
+
         a.set_title(k)
         a.boxplot(val)
-        a.set_xticklabels(assemblies, rotation=45)
+        a.set_xticklabels(assemblies, rotation=45, ha="right")
+        a.set_ylabel("Proportion")
+        a.set_xlim([0.5, len(assemblies) + .5])
 
         # Create table
         if create_table:
@@ -485,16 +495,19 @@ def main():
 
     elif arg.single_assembly:
         for vfile in vcf_files:
-            total_loci, stats = compare_pairs(vfile, pairs, convert_vcf)
+            total_loci, stats, snps = compare_pairs(vfile, pairs, convert_vcf)
             plot_single_assembly(total_loci, stats, vfile.split(".")[0])
 
     else:
         multi_stats = OrderedDict()
         multi_loci = []
+        total_snps = []
         for vfile in vcf_files:
-            total_loci, stats = compare_pairs(vfile, pairs)
+            total_loci, stats, snps = compare_pairs(vfile, pairs)
             multi_stats[vfile] = stats
             multi_loci.append(total_loci)
-        plot_multiple_assemblies(multi_loci, multi_stats, plot_file)
+            total_snps.append(snps)
+        plot_multiple_assemblies(multi_loci, multi_stats, plot_file,
+                                 total_snps=total_snps)
 
 main()
