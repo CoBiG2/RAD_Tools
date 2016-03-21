@@ -21,6 +21,7 @@ output_prefix = args[2]
 # Read VCF file. Read up to 1M SNPs
 print("Reading VCF file")
 vcf <- read.vcf(vcf_file, to=1000000, quiet=T)
+vcf_info <- VCFloci(vcf_file)
 
 # Replace missing data with NA
 vcf[vcf=="./."] <- NA
@@ -90,7 +91,7 @@ dev.off()
 
 # Get proportions of statistically significant departures from LD
 all_pairwise <- length(which(!is.na(ldres$"Q-values")))
-sig_results <- length(which(ldres$"Q-values" < 0.05))
+sig_results <- length(which(ldres$"Q-values" <= 0.05))
 sig_prop <- sig_results / all_pairwise
 
 # Get mean and sd from D' and R2
@@ -99,12 +100,25 @@ Dc_stdev = sd(ldres$"D'", na.rm=T)
 R2_mean = mean(ldres$"R^2", na.rm=T)
 R2_stdev = sd(ldres$"R^2", na.rm=T)
 
+if (!all(is.na(Dc_sig))) {
+    print("Writing significant SNP pairs")
+    # Get SNP pairs coordinates with significant q-values
+    snp_coord <- which(ldres$"Q-values" <= 0.05, arr.ind=TRUE)
+    # Convert SNPs pairs coordinates into the actual chromosome and position
+    snp_pairs <- t(apply(snp_coord, 1, function(r) c(vcf_info$CHROM[r[1]],
+      vcf_info$POS[r[1]], vcf_info$CHROM[r[2]], vcf_info$POS[r[2]], ldres$"R^2"[r[1], r[2]], ldres$"D'"[r[1], r[2]])))
+
+    # Write pairs of SNPs with significant LD into csv
+    table_data <- matrix(c("CHROM1", "POS1", "CHROM2", "POS2", "R^2", "D'"), ncol=6)
+    table_data <- rbind(table_data, snp_pairs)
+    write.matrix(table_data, file="Significant_snp_pairs.csv", sep=";")
+}
 # Write info to file
 write(c(paste("Total number of pair wise comparisons: ", all_pairwise, sep=""),
-        paste("Number of significant LD comparisons: ", sig_results, sep=""),
-        paste("Porportion of significant LD comparisons: ", sig_prop, sep=""),
-        paste("Mean D': ", Dc_mean, sep=""),
-        paste("Stdev D': ", Dc_stdev, sep=""),
-        paste("Mean R2: ", R2_mean, sep=""),
-        paste("Stdev R2: ", R2_stdev, sep="")),
-      file=paste(output_prefix, ".log", sep=""))
+      paste("Number of significant LD comparisons: ", sig_results, sep=""),
+      paste("Porportion of significant LD comparisons: ", sig_prop, sep=""),
+      paste("Mean D': ", Dc_mean, sep=""),
+      paste("Stdev D': ", Dc_stdev, sep=""),
+      paste("Mean R2: ", R2_mean, sep=""),
+      paste("Stdev R2: ", R2_stdev, sep="")),
+    file=paste(output_prefix, ".log", sep=""))
