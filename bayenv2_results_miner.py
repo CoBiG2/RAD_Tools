@@ -17,7 +17,7 @@
 import re
 
 
-def main(bf_filename, envfile_name, bayesfactor=10, p_value=0.05):
+def main(bf_filename, envfile_name, bayesfactor=10, p_value=0):
     """
     Parses the ".bf" file outputted by Bayenv2 and returns the SNPs with
     putative associations.
@@ -30,13 +30,21 @@ def main(bf_filename, envfile_name, bayesfactor=10, p_value=0.05):
     for lines in infile:
         lines = lines.strip().split()
         snp_name = name_sanitizer(lines[0])
-        bfs = [float(x) for x in lines[1::3]]
-        spearman = [float(x) for x in lines[2::3]]
-        # pearson = [float(x) for x in lines[3::3]] # Unused so far
+        if p_value == 0:
+            bfs = [float(x) for x in lines[1:]]
+        else:
+            bfs = [float(x) for x in lines[1::3]]
+            spearman = [float(x) for x in lines[2::3]]
+            # pearson = [float(x) for x in lines[3::3]] # Unused so far
 
         for i in range(len(bfs)):
-            if bfs[i] >= bayesfactor and spearman[i] < p_value:
-                print(snp_name + ": " + env_vars[i])
+            if p_value == 0:
+                if bfs[i] >= bayesfactor:
+                    print(snp_name + " \t" + env_vars[i] + "\t" + str(bfs[i]))
+            else:
+                if bfs[i] >= bayesfactor and spearman[i] < p_value:
+                    print(snp_name + " \t" + env_vars[i] + "\t" + str(bfs[i]))
+
 
     infile.close()
 
@@ -45,7 +53,7 @@ def name_sanitizer(snp_name):
     Replaces the full text on the SNP name for something sensible & returns it.
     """
 
-    replacement = re.search("/\\d+.", snp_name).group(0)[1:-1]
+    replacement = re.search("\d+$", snp_name).group(0)
     replacement = "SNP_" + replacement
 
     return replacement
@@ -65,6 +73,8 @@ def parse_env_vars(envfile_name):
 
 if __name__ == "__main__":
     # Usage: bayenv2_results_miner.py file.bf env_vars.txt [BF_value] [p-value]
+    # If a p-value is not provided, the program will assume that spearman ranks
+    # were not calculated and consider every column to be a BF value.
     from sys import argv
     ARGUMENTS = argv[1:]
     main(*ARGUMENTS)
