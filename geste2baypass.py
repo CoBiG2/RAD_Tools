@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with geste2baypass. If not, see <http://www.gnu.org/licenses/>.
 
-#Usage: python3 geste2baypass.py
+#Usage: python3 geste2baypass.py file.geste file.BAYPASS
 
 # Shamelessly stole code from  https://github.com/Telpidus/omics_tools/blob/master/GESTE2BayEnv.py
 
