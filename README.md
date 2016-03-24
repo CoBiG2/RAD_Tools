@@ -55,6 +55,20 @@ which has the same name as the original, but with the prefix
 
 This script will convert a file from the GESTE format to Baypass input.
 
+## Baypass_workflow.R
+
+This **nasty**, **dirty** and **ugly** script will automate the workflow for 
+the awesome [Bayenv](http://www1.montpellier.inra.fr/CBGP/software/baypass/) 
+software by M. Gautier, which is described in 
+[this paper](http://www.genetics.org/content/early/2015/10/20/genetics.115.181453).
+It does **no error handling** of any kind, nor any logging. It just automates 
+the procedures outlined in the manual with some degrees of freedom. 
+Please be carefull when using it. It may kill your kittens and/or burn your 
+house down.
+It does not take any arguments, you have to edit every variable by hand in the 
+script itself. Sorry about that. Time constraints and all that, you know the 
+drill.
+
 ## License
 
 Everything is under the GPLv3.
