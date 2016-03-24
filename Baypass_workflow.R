@@ -1,31 +1,50 @@
-################################################################################
-#Strat by running this:
-#g_baypass -npop 16 -gfile Qsuber_GBS_noBul.baypass -outprefix core/Qsuber_core -nthreads 6 > core/Qsuber_core.log
-###############################################################################
-
-
-require(corrplot) ; require(ape)
+require(corrplot)
+require(ape)
 #source the baypass R functions (check PATH)
 source("~/Software/Science/baypass_2.1/utils/baypass_utils.R")
 
-# Define some variables
+# Define some variables. This is where we define local files & paths.
+baypass_executable = "~/Software/Science/baypass_2.1/sources/g_baypass"
 popname_file = "~/Desktop/Qsuber_GBS/Clust5/02-filtered_vcfs/popnames_noBul.txt"
+envfile = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/ENVFILE"
 geno_file = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/Qsuber_GBS_noBul.baypass"
+prefix = "Qsuber"
+num_pops = 16
 num_SNPs = 1067
-core_omega_file = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/core/Qsuber_core_mat_omega.out"
-core_pi_xtx_file = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/core/Qsuber_core_summary_pi_xtx.out"
-core_summary_beta_params = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/core/Qsuber_core_summary_beta_params.out"
-pod_mat_omega = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/core/Qsuber_core_POD_mat_omega.out"
-pod_summary_beta_params = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/core/Qsuber_core_POD_summary_beta_params.out"
-pod_summary_pi_xtx = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/core/Qsuber_core_POD_summary_pi_xtx.out"
-covis_summary_betai_reg = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/mcmc_core/Qsuber_mcmc_core_summary_betai_reg.out"
-covis2_summary_betai_reg = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/mcmc_core/Qsuber_mcmc_core2_summary_betai_reg.out"
-covmcmc_summary_betai = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/mcmc_std/Qsuber_mcmc_std_summary_betai.out"
-covmcmc_summary_pi_xtx = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/mcmc_std/Qsuber_mcmc_std_summary_pi_xtx.out"
-covaux_summary_betai = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/mcmc_aux/Qsuber_mcmc_aux_summary_betai.out"
-covaux_summary_pi_xtx = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/mcmc_aux/Qsuber_mcmc_aux_summary_pi_xtx.out"
+num_threads = 6
 
 
+# Everything below this point should be fully automated.
+
+basepath = dirname(geno_file)
+coredir = paste(basepath, "/core/", sep="")
+mcmc_coredir = paste(basepath, "/mcmc_core/", sep="")
+mcmc_stddir = paste(basepath, "/mcmc_std/", sep="")
+mcmc_auxdir = paste(basepath, "/mcmc_aux/", sep="")
+
+dir.create(coredir)
+dir.create(mcmc_coredir)
+dir.create(mcmc_stddir)
+dir.create(mcmc_auxdir)
+
+core_omega_file = paste(coredir, prefix, "_core_mat_omega.out", sep="")
+core_pi_xtx_file = paste(coredir, prefix, "_core_summary_pi_xtx.out", sep="")
+core_summary_beta_params = paste(coredir, prefix, "_core_summary_beta_params.out", sep="")
+pod_mat_omega = paste(coredir, prefix, "_core_POD_mat_omega.out", sep="")
+pod_summary_beta_params = paste(coredir, prefix, "_core_POD_summary_beta_params.out", sep="")
+pod_summary_pi_xtx = paste(coredir, prefix, "_core_POD_summary_pi_xtx.out", sep="")
+covis_summary_betai_reg = paste(mcmc_coredir, prefix, "_mcmc_core_summary_betai_reg.out", sep="")
+covis2_summary_betai_reg = paste(mcmc_coredir, prefix, "_mcmc_core2_summary_betai_reg.out", sep="")
+covmcmc_summary_betai = paste(mcmc_stddir, prefix, "_mcmc_std_summary_betai.out", sep="")
+covmcmc_summary_pi_xtx = paste(mcmc_stddir, prefix, "_mcmc_std_summary_pi_xtx.out", sep="")
+covaux_summary_betai = paste(mcmc_auxdir, prefix, "_mcmc_aux_summary_betai.out", sep="")
+covaux_summary_pi_xtx = paste(mcmc_auxdir, prefix, "_mcmc_aux_summary_pi_xtx.out", sep="")
+
+#Run the first command:
+command1 = paste(baypass_executable, " -npop ", num_pops, " -gfile ",
+                 geno_file, " -outprefix ", coredir, prefix, "_core",
+                 " -nthreads ", num_threads, sep="")
+system(command=command1)
 
 
 #upload estimate of omega
@@ -58,14 +77,18 @@ simu.bta<-simulate.baypass(omega.mat=omega,nsnp=num_SNPs,
                            sample.size=current.data$NN,
                            beta.pi=pi.beta.coef,pi.maf=0,suffix="btapods")
 
+
+file.rename("~/G.btapods", paste(coredir, "G.btapods", sep=""))
 ################################################################################
 #Run this:
 #g_baypass -npop 16 -gfile core/G.btapods -outprefix core/Qsuber_core_POD -nthreads 6 > core/Qsuber_core_POD.log
 ###############################################################################
 
-#############################################################
-# Remember to move G.betapods from ~/ to somewhere sensible!#
-#############################################################
+command2 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", coredir,
+                 "G.btapods", " -outprefix ", coredir, prefix, "_core_POD",
+                 " -nthreads ", num_threads, sep="")
+system(command=command2)
+
 
 #######################################################
 #Sanity Check: Compare POD and original data estimates
@@ -96,6 +119,11 @@ abline(h=pod.thresh,lty=2)
 #g_baypass -npop 16 -gfile Qsuber_GBS_noBul.baypass -outprefix mcmc_core/Qsuber_mcmc_core -nthreads 6 -efile ENVFILE  > mcmc_core/Qsuber_mcmc_core.log
 ###############################################################################
 
+command3 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
+                 " -outprefix ", mcmc_coredir, prefix, "_mcmc_core",
+                 " -nthreads ", num_threads, " -efile ", envfile, sep="")
+system(command=command3)
+
 covis.snp.res=read.table(covis_summary_betai_reg,h=T)
 graphics.off()
 layout(matrix(1:3,3,1))
@@ -109,6 +137,13 @@ plot(covis.snp.res$Beta_is,xlab="SNP",ylab=expression(beta~"coefficient"))
 #g_baypass -npop 16 -gfile Qsuber_GBS_noBul.baypass -outprefix mcmc_core/Qsuber_mcmc_core2 -nthreads 6 -efile ENVFILE -omegafile core/Qsuber_core_mat_omega.out > mcmc_core/Qsuber_mcmc_core2.log
 ###############################################################################
 
+command4 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
+                 " -outprefix ", mcmc_coredir, prefix, "_mcmc_core2",
+                 " -nthreads ", num_threads, " -efile ", envfile,
+                 " -omegafile ", core_omega_file, sep="")
+system(command=command4)
+
+
 covis2.snp.res=read.table(covis2_summary_betai_reg,h=T)
 graphics.off()
 layout(matrix(1:3,3,1))
@@ -120,6 +155,12 @@ plot(covis2.snp.res$Beta_is,xlab="SNP",ylab=expression(beta~"coefficient"))
 #Run this:
 #g_baypass -npop 16 -gfile Qsuber_GBS_noBul.baypass -outprefix mcmc_std/Qsuber_mcmc_std -nthreads 6 -efile ENVFILE -omegafile core/Qsuber_core_mat_omega.out -covmcmc > mcmc_std/Qsuber_mcmc_std.log
 ###############################################################################
+
+command5 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
+                 " -outprefix ", mcmc_stddir, prefix, "_mcmc_std",
+                 " -nthreads ", num_threads, " -efile ", envfile,
+                 " -omegafile ", core_omega_file, " -covmcmc", sep="")
+system(command=command5)
 
 covmcmc.snp.res=read.table(covmcmc_summary_betai,h=T)
 covmcmc.snp.xtx=read.table(covmcmc_summary_pi_xtx,h=T)$M_XtX
@@ -134,6 +175,12 @@ plot(covmcmc.snp.xtx,xlab="SNP",ylab="XtX corrected for SMS")
 #Run this:
 #g_baypass -npop 16 -gfile Qsuber_GBS_noBul.baypass -outprefix mcmc_aux/Qsuber_mcmc_aux -nthreads 6 -efile ENVFILE -omegafile core/Qsuber_core_mat_omega.out -auxmodel > mcmc_aux/Qsuber_mcmc_aux.log
 ###############################################################################
+
+command6 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
+                 " -outprefix ", mcmc_auxdir, prefix, "_mcmc_aux",
+                 " -nthreads ", num_threads, " -efile ", envfile,
+                 " -omegafile ", core_omega_file, " -auxmodel", sep="")
+system(command=command6)
 
 covaux.snp.res=read.table(covaux_summary_betai,h=T)
 covaux.snp.xtx=read.table(covaux_summary_pi_xtx,h=T)$M_XtX
