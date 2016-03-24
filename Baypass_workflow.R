@@ -40,7 +40,7 @@ covmcmc_summary_pi_xtx = paste(mcmc_stddir, prefix, "_mcmc_std_summary_pi_xtx.ou
 covaux_summary_betai = paste(mcmc_auxdir, prefix, "_mcmc_aux_summary_betai.out", sep="")
 covaux_summary_pi_xtx = paste(mcmc_auxdir, prefix, "_mcmc_aux_summary_pi_xtx.out", sep="")
 
-#Run the first command:
+### Run the first command:
 command1 = paste(baypass_executable, " -npop ", num_pops, " -gfile ",
                  geno_file, " -outprefix ", coredir, prefix, "_core",
                  " -nthreads ", num_threads, sep="")
@@ -79,11 +79,8 @@ simu.bta<-simulate.baypass(omega.mat=omega,nsnp=num_SNPs,
 
 
 file.rename("~/G.btapods", paste(coredir, "G.btapods", sep=""))
-################################################################################
-#Run this:
-#g_baypass -npop 16 -gfile core/G.btapods -outprefix core/Qsuber_core_POD -nthreads 6 > core/Qsuber_core_POD.log
-###############################################################################
 
+###
 command2 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", coredir,
                  "G.btapods", " -outprefix ", coredir, prefix, "_core_POD",
                  " -nthreads ", num_threads, sep="")
@@ -114,11 +111,7 @@ pod.thresh=quantile(pod.xtx,probs=0.99)
 plot(anacore.snp.res$M_XtX)
 abline(h=pod.thresh,lty=2)
 
-################################################################################
-#Run this:
-#g_baypass -npop 16 -gfile Qsuber_GBS_noBul.baypass -outprefix mcmc_core/Qsuber_mcmc_core -nthreads 6 -efile ENVFILE  > mcmc_core/Qsuber_mcmc_core.log
-###############################################################################
-
+###
 command3 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_coredir, prefix, "_mcmc_core",
                  " -nthreads ", num_threads, " -efile ", envfile, sep="")
@@ -132,11 +125,7 @@ plot(covis.snp.res$eBPis,xlab="SNP",ylab="eBPis")
 plot(covis.snp.res$Beta_is,xlab="SNP",ylab=expression(beta~"coefficient"))
 
 
-################################################################################
-#Run this:
-#g_baypass -npop 16 -gfile Qsuber_GBS_noBul.baypass -outprefix mcmc_core/Qsuber_mcmc_core2 -nthreads 6 -efile ENVFILE -omegafile core/Qsuber_core_mat_omega.out > mcmc_core/Qsuber_mcmc_core2.log
-###############################################################################
-
+###
 command4 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_coredir, prefix, "_mcmc_core2",
                  " -nthreads ", num_threads, " -efile ", envfile,
@@ -151,11 +140,7 @@ plot(covis2.snp.res$BF.dB.,xlab="SNP",ylab="BFis (in dB)")
 plot(covis2.snp.res$eBPis,xlab="SNP",ylab="eBPis")
 plot(covis2.snp.res$Beta_is,xlab="SNP",ylab=expression(beta~"coefficient"))
 
-################################################################################
-#Run this:
-#g_baypass -npop 16 -gfile Qsuber_GBS_noBul.baypass -outprefix mcmc_std/Qsuber_mcmc_std -nthreads 6 -efile ENVFILE -omegafile core/Qsuber_core_mat_omega.out -covmcmc > mcmc_std/Qsuber_mcmc_std.log
-###############################################################################
-
+###
 command5 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_stddir, prefix, "_mcmc_std",
                  " -nthreads ", num_threads, " -efile ", envfile,
@@ -170,12 +155,7 @@ plot(covmcmc.snp.res$eBPmc,xlab="SNP",ylab="eBPmc")
 plot(covmcmc.snp.res$M_Beta,xlab="SNP",ylab=expression(beta~"coefficient"))
 plot(covmcmc.snp.xtx,xlab="SNP",ylab="XtX corrected for SMS")
 
-
-################################################################################
-#Run this:
-#g_baypass -npop 16 -gfile Qsuber_GBS_noBul.baypass -outprefix mcmc_aux/Qsuber_mcmc_aux -nthreads 6 -efile ENVFILE -omegafile core/Qsuber_core_mat_omega.out -auxmodel > mcmc_aux/Qsuber_mcmc_aux.log
-###############################################################################
-
+###
 command6 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_auxdir, prefix, "_mcmc_aux",
                  " -nthreads ", num_threads, " -efile ", envfile,
