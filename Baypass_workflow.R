@@ -70,18 +70,23 @@ pop.names = c(as.matrix(read.table(popname_file)))
 dimnames(omega)=list(pop.names,pop.names)
 #Compute and visualize the correlation matrix
 cor.mat=cov2cor(omega)
+svg(filename=paste(coredir, "omega_corr.svg") )
 corrplot(cor.mat,method="color",mar=c(2,1,2,2)+0.1,
          main=expression("Correlation map based on"~hat(Omega)))
+dev.off()
 
 #Visualize the correlation matrix as hierarchical clustering tree
 bta14.tree=as.phylo(hclust(as.dist(1-cor.mat**2)))
+svg(filename=paste(coredir, "Hier_clust_tree.svg"))
 plot(bta14.tree,type="p",
      main=expression("Hier. clust. tree based on"~hat(Omega)~"("*d[ij]*"=1-"*rho[ij]*")"))
+dev.off()
 
 #Estimates of the XtX differentiation measures
 anacore.snp.res=read.table(core_pi_xtx_file,h=T)
+svg(filename=paste(coredir, "XtX_diff.svg"))
 plot(anacore.snp.res$M_XtX)
-
+dev.off()
 
 #get estimates (post. mean) of both the a_pi and b_pi parameters of
 #the Pi Beta distribution
@@ -108,13 +113,17 @@ system(command=command2)
 #######################################################
 #get estimate of omega from the POD analysis
 pod.omega=as.matrix(read.table(pod_mat_omega))
+svg(filename=paste(coredir, "Omega_estimate_from_POD.svg"))
 plot(pod.omega,omega) ; abline(a=0,b=1)
+dev.off()
 fmd.dist(pod.omega,omega)
 
 #get estimates (post. mean) of both the a_pi and b_pi parameters of
 #the Pi Beta distribution from the POD analysis
 pod.pi.beta.coef=read.table(pod_summary_beta_params,h=T)$Mean
+svg(filename=paste(coredir, "POD_estimates.svg"))
 plot(pod.pi.beta.coef,pi.beta.coef) ; abline(a=0,b=1)
+dev.off
 
 #######################################################
 #XtX calibration
@@ -124,8 +133,10 @@ pod.xtx=read.table(pod_summary_pi_xtx,h=T)$M_XtX
 #compute the 1% threshold
 pod.thresh=quantile(pod.xtx,probs=0.99)
 #add the thresh to the actual XtX plot
+svg(filename=paste(coredir, "XtX_POD_diff.svg"))
 plot(anacore.snp.res$M_XtX)
 abline(h=pod.thresh,lty=2)
+dev.off()
 
 ###
 command3 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
@@ -135,10 +146,12 @@ system(command=command3)
 
 covis.snp.res=read.table(covis_summary_betai_reg,h=T)
 graphics.off()
+svg(filename=paste(mcmc_coredir, "BFs_layout.svg"))
 layout(matrix(1:3,3,1))
 plot(covis.snp.res$BF.dB.,xlab="SNP",ylab="BFis (in dB)")
 plot(covis.snp.res$eBPis,xlab="SNP",ylab="eBPis")
 plot(covis.snp.res$Beta_is,xlab="SNP",ylab=expression(beta~"coefficient"))
+dev.off()
 
 
 ###
@@ -151,10 +164,12 @@ system(command=command4)
 
 covis2.snp.res=read.table(covis2_summary_betai_reg,h=T)
 graphics.off()
+svg(filename=paste(mcmc_coredir, "BFs_layout_pass2.svg"))
 layout(matrix(1:3,3,1))
 plot(covis2.snp.res$BF.dB.,xlab="SNP",ylab="BFis (in dB)")
 plot(covis2.snp.res$eBPis,xlab="SNP",ylab="eBPis")
 plot(covis2.snp.res$Beta_is,xlab="SNP",ylab=expression(beta~"coefficient"))
+dev.off()
 
 ###
 command5 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
@@ -166,10 +181,12 @@ system(command=command5)
 covmcmc.snp.res=read.table(covmcmc_summary_betai,h=T)
 covmcmc.snp.xtx=read.table(covmcmc_summary_pi_xtx,h=T)$M_XtX
 graphics.off()
+svg(filename=paste(mcmc_stddir, "BFs_layout.svg"))
 layout(matrix(1:3,3,1))
 plot(covmcmc.snp.res$eBPmc,xlab="SNP",ylab="eBPmc")
 plot(covmcmc.snp.res$M_Beta,xlab="SNP",ylab=expression(beta~"coefficient"))
 plot(covmcmc.snp.xtx,xlab="SNP",ylab="XtX corrected for SMS")
+dev.off()
 
 ###
 command6 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
@@ -181,7 +198,9 @@ system(command=command6)
 covaux.snp.res=read.table(covaux_summary_betai,h=T)
 covaux.snp.xtx=read.table(covaux_summary_pi_xtx,h=T)$M_XtX
 graphics.off()
+svg(filename=paste(mcmc_auxdir, "BFs_layout.svg"))
 layout(matrix(1:3,3,1))
 plot(covaux.snp.res$BF.dB.,xlab="SNP",ylab="BFmc (in dB)")
 plot(covaux.snp.res$M_Beta,xlab="SNP",ylab=expression(beta~"coefficient"))
 plot(covaux.snp.xtx,xlab="SNP",ylab="XtX corrected for SMS")
+dev.off()
