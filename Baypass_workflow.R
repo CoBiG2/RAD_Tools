@@ -94,7 +94,7 @@ simu.bta<-simulate.baypass(omega.mat=omega,nsnp=num_SNPs,
                            beta.pi=pi.beta.coef,pi.maf=0,suffix="btapods")
 
 
-file.rename("~/G.btapods", paste(coredir, "G.btapods", sep=""))
+file.rename("G.btapods", paste(coredir, "G.btapods", sep=""))
 
 ###
 command2 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", coredir,
