@@ -22,11 +22,11 @@ source("~/Software/Science/baypass_2.1/utils/baypass_utils.R")
 # Define some variables. This is where we define local files & paths.
 baypass_executable = "~/Software/Science/baypass_2.1/sources/g_baypass"
 popname_file = "~/Desktop/Qsuber_GBS/Clust5/02-filtered_vcfs/popnames_noBul.txt"
-envfile = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/ENVFILE"
-geno_file = "~/Desktop/Qsuber_GBS/Clust5/04-CenterSNP/08-Baypass/Qsuber_GBS_noBul.baypass"
+envfile = "~/Desktop/Qsuber_GBS/Clust5/03-R2_1/08-Baypass/ENVFILE"
+geno_file = "~/Desktop/Qsuber_GBS/Clust5/03-R2_1/08-Baypass/Qsuber_GBS_noBul.baypass"
 prefix = "Qsuber"
 num_pops = 16
-num_SNPs = 1067
+num_SNPs = 1820
 num_threads = 6
 
 
@@ -141,7 +141,8 @@ dev.off()
 ###
 command3 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_coredir, prefix, "_mcmc_core",
-                 " -nthreads ", num_threads, " -efile ", envfile, sep="")
+                 " -nthreads ", num_threads, " -efile ", envfile, "-scalecov",
+                 sep="")
 system(command=command3)
 
 covis.snp.res=read.table(covis_summary_betai_reg,h=T)
@@ -157,7 +158,7 @@ dev.off()
 ###
 command4 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_coredir, prefix, "_mcmc_core2",
-                 " -nthreads ", num_threads, " -efile ", envfile,
+                 " -nthreads ", num_threads, " -efile ", envfile, "-scalecov",
                  " -omegafile ", core_omega_file, sep="")
 system(command=command4)
 
@@ -174,7 +175,7 @@ dev.off()
 ###
 command5 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_stddir, prefix, "_mcmc_std",
-                 " -nthreads ", num_threads, " -efile ", envfile,
+                 " -nthreads ", num_threads, " -efile ", envfile, "-scalecov",
                  " -omegafile ", core_omega_file, " -covmcmc", sep="")
 system(command=command5)
 
@@ -191,7 +192,7 @@ dev.off()
 ###
 command6 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_auxdir, prefix, "_mcmc_aux",
-                 " -nthreads ", num_threads, " -efile ", envfile,
+                 " -nthreads ", num_threads, " -efile ", envfile, "-scalecov",
                  " -omegafile ", core_omega_file, " -auxmodel", sep="")
 system(command=command6)
 
