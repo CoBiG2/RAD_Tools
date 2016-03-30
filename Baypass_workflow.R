@@ -28,9 +28,12 @@ prefix = "Qsuber"
 num_pops = 16
 num_SNPs = 1820
 num_threads = 6
+scale_cov = TRUE # Set to false if your ENVFILE is already normalized
 
 
 # Everything below this point should be fully automated.
+
+scalecov <- if (scale_cov) {" -scalecov "} else {""}
 
 basepath = dirname(geno_file)
 coredir = paste(basepath, "/core/", sep="")
@@ -141,7 +144,7 @@ dev.off()
 ###
 command3 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_coredir, prefix, "_mcmc_core",
-                 " -nthreads ", num_threads, " -efile ", envfile, "-scalecov",
+                 " -nthreads ", num_threads, " -efile ", envfile, scalecov,
                  sep="")
 system(command=command3)
 
@@ -158,7 +161,7 @@ dev.off()
 ###
 command4 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_coredir, prefix, "_mcmc_core2",
-                 " -nthreads ", num_threads, " -efile ", envfile, "-scalecov",
+                 " -nthreads ", num_threads, " -efile ", envfile, scalecov,
                  " -omegafile ", core_omega_file, sep="")
 system(command=command4)
 
@@ -175,7 +178,7 @@ dev.off()
 ###
 command5 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_stddir, prefix, "_mcmc_std",
-                 " -nthreads ", num_threads, " -efile ", envfile, "-scalecov",
+                 " -nthreads ", num_threads, " -efile ", envfile, scalecov,
                  " -omegafile ", core_omega_file, " -covmcmc", sep="")
 system(command=command5)
 
@@ -192,7 +195,7 @@ dev.off()
 ###
 command6 = paste(baypass_executable, " -npop ", num_pops, " -gfile ", geno_file,
                  " -outprefix ", mcmc_auxdir, prefix, "_mcmc_aux",
-                 " -nthreads ", num_threads, " -efile ", envfile, "-scalecov",
+                 " -nthreads ", num_threads, " -efile ", envfile, scalecov,
                  " -omegafile ", core_omega_file, " -auxmodel", sep="")
 system(command=command6)
 
