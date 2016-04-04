@@ -69,6 +69,25 @@ It does not take any arguments, you have to edit every variable by hand in the
 script itself. Sorry about that. Time constraints and all that, you know the 
 drill.
 
+## correct_geste.py
+
+This script will correct some inconsistencies in GESTE files created by PGDSpider.
+Sometimes, when all alleles are of the same type, the get presented in the geste files as:
+
+```
+## X    2   X 0 
+```
+
+Other time they show up instead like this:
+
+```
+## X    1   X 
+```
+
+This script modifies the file so that they are always presented in the first form.
+It reads a GESTE file and spits the output to STDOUT, so you might want to use a shell redirect.
+
+
 ## License
 
 Everything is under the GPLv3.
