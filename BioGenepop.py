@@ -18,6 +18,8 @@
 
 from Bio.PopGen.GenePop.EasyController import EasyController
 
+# WARNING! Requires a patched BioPython to work!
+# https://github.com/biopython/biopython/issues/582
 
 def get_exp_obs_het(filehandle, outfile_name):
     """Doc here"""
