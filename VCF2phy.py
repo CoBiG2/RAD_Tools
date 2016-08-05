@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Copyright 2015 Francisco Pina Martins <f.pinamartins@gmail.com>
+# Copyright 2015 Diogo N Silva <o.diogosilva@gmail.com>
 # This file is part of VCP2phy.
 # VCP2phy is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,64 +14,186 @@
 # You should have received a copy of the GNU General Public License
 # along with VCP2phy. If not, see <http://www.gnu.org/licenses/>.
 
-from sys import argv
+import argparse
+from collections import defaultdict, OrderedDict
 
-def Ambiguifier(bases):
-	"""Take a list or tuple of bases and returns the corresondig ambiguity."""
-	bases = list(bases)
-	ambigs = {"AA": "A", "CC": "C", "TT": "T", "GG": "G", "AC": "M", "AG": "R",
-	"AT": "W", "CG": "S", "CT": "Y", "GT": "K", "ACG": "V",
-	"ACT": "H", "AGT": "D", "CGT": "B", "ACGT": "N",
-	"..": "N"}
-	
-	bases.sort()
-	
-	return ambigs["".join(bases)]
-	
-def VCF_parser(vcf_file_name):
-	"""Parse a VCF file and return {name:seq}."""
-	infile = open(vcf_file_name,'r')
-	sequences = {}
-	for lines in infile:
-		if lines.startswith("##"):
+parser = argparse.ArgumentParser(description="Converter of VCF into phylip "
+											 "format")
+parser.add_argument("-vcf", dest="vcf_file", help="VCF file")
+parser.add_argument("-loci", dest="loci_file", help="If provided, the output "
+					"file will contain the full sequences contained in the "
+					" loci file.")
+parser.add_argument("-o", dest="output_file", help="Name of output file")
+
+arg = parser.parse_args()
+
+def parse_vcf(vcf_file):
+	"""
+	Parses the VCF file and returns a dictionary with the loci (chromossomes)
+	as keys and a list of positions as values.
+	"""
+
+	loci = defaultdict(list)
+
+	vcf_handle = open(vcf_file)
+
+	for line in vcf_handle:
+
+		if line.startswith("##"):
 			pass
-		elif lines.startswith("#"):
-			taxa = lines.split()[9:]
-			for i in taxa:
-				sequences[i] = ""
-		else:
-			sequences = VCF_line_parser(lines, sequences, taxa)
-			
-	return sequences
-			
 
-def VCF_line_parser(line, sequences, taxa):
-	"""Parse a single data line of a VCF file and adds each individual
-	base to the sequences dict, which is returned."""
-	line = line.strip().split()
-	aleles = ",".join(line[3:5])
-	aleles = aleles.split(",")
-	bases = line[9:]
-	for b, t in zip(bases, taxa):
-		b = b.replace("|", "")
-		for a in range(len(aleles)):
-			b = b.replace(str(a), aleles[a])
-		b = b.replace("./.", "..")
-		b = Ambiguifier(b)
-		sequences[t] += b
-		
-	return sequences
+		elif line.startswith("#CHROM"):
+			taxa_list = line.strip().split()[9:]
+
+		elif line.strip() != "":
+			fields = line.strip().split()
+			loci[int(fields[0])].append(int(fields[1]) - 1)
+
+	vcf_handle.close()
+
+	return loci, taxa_list
 
 
-def Phylip_writer(sequences):
-	"""Take a dict and write a phylip file."""
-	print(str(len(sequences)) + " " + str(len(sequences[list(sequences.keys())[0]])))
-	for names in sequences:
-		print(names + "\t", end="")
-		print(sequences[names], end="\n")
-	
+def mask_alignment(aln, var_positions):
+	"""
+	Parses an alignment in an OrderedDict format {taxon: seq} and returns a
+	similar alignment OrderedDict with the variable positions not present in the
+	var_positions list masked
+	"""
+
+	masked_dic = OrderedDict((tx, []) for tx in aln)
+
+	for p, column in enumerate(zip(*aln.values())):
+
+		gapless_column = len(set([x for x in column if x.lower() not in ["-", "n"]]))
+
+		# If this represents a real variable position or a column with no
+		# variation (excluding missing data), save sequences as they
+		# are
+		if p in var_positions or (column not in var_positions and
+							      gapless_column == 1):
+
+			# This appends the existing nucleotide of each taxon to its
+			# corresponding taxon in masked_dic
+			list(map(lambda char, tx: masked_dic[tx].append(char),
+			                column, list(aln.keys())))
+
+		elif p not in var_positions and gapless_column > 1:
+
+			# This appends an "n" to each taxon in masked_dic
+			list(map(lambda tx: masked_dic[tx].append("n"), list(aln.keys())))
+
+	masked_dic = OrderedDict((tx, "".join(seq)) for tx, seq in masked_dic.items())
+
+	return masked_dic
+
+
+def parse_loci(loci_file, vcf_loci, taxa_list):
+	"""
+	Writes a phylip file from a loci file, according to the positions in the
+	VCF. Variable positions that are not present in the VCF are soft masked
+	"""
+
+	fh = open(loci_file)
+
+	# Keeps track of current locus
+	locus = 1
+	current_aln = OrderedDict()
+
+	# Keeps track of the sequence lenght for each loci. For the partitions file.
+	seq_lens = []
+
+	# Using list values instead of strings makes the append process much faster
+	total_aln = dict((x, []) for x in taxa_list)
+
+	for line in fh:
+
+		if line.startswith("//") and locus not in vcf_loci:
+
+			print("\rParsing alignment {}".format(locus), end="")
+			current_aln = OrderedDict()
+
+			locus += 1
+
+		if line.startswith("//") and locus in vcf_loci:
+
+			print("\rParsing alignment {}".format(locus), end="")
+
+			# If an alignment has already been set, do masking routine
+			if current_aln:
+				masked_aln = mask_alignment(current_aln, vcf_loci[locus])
+				current_len = len(list(masked_aln.values())[0])
+
+				# Append masking result to total alignment
+				for tx in taxa_list:
+					try:
+						total_aln[tx].append(masked_aln[tx])
+					except KeyError:
+						total_aln[tx].append("n" * current_len)
+
+				seq_lens.append(current_len)
+
+				# Up counter
+				locus += 1
+
+
+		# Loci present in VCF. Begin alignment parsing routine
+		elif locus in vcf_loci:
+			# Get alignment
+
+			fields = line.strip().split()
+			# Removes ">" from taxon name
+			taxon = fields[0][1:]
+			current_aln[taxon] = fields[1]
+
+	fh.close()
+
+	# Finalize alignment object by converting list values into strings
+	return dict((tx, "".join(seq)) for tx, seq in total_aln.items()), seq_lens
+
+def write_to_phy(aln_dict, seq_lens, output_file):
+	"""
+	Writes a alignment dictionary {taxon: seq} to a phylip file
+	"""
+
+	# Write main phylip file
+	fh = open(output_file + ".phy", "w")
+
+	fh.write("{} {}\n".format(len(aln_dict),
+	                          len(list(aln_dict.values())[0])))
+
+	for tx, seq in aln_dict.items():
+		fh.write("{}\t{}\n".format(tx, seq))
+
+	fh.close()
+
+	# Write partitions file
+	fh = open(output_file + ".partitions", "w")
+	locus_n = 1
+	c = 1
+
+	for l in seq_lens:
+		fh.write("DNA, p{}={}-{}\n".format(locus_n, c, c + l))
+		c += (l + 1)
+		locus_n += 1
+
+	fh.close()
+
+def main():
+
+	# Arguments
+	vcf_file = arg.vcf_file
+	loci_file = arg.loci_file
+	output_file = arg.output_file
+
+	# Parse VCF
+	loci_storage, taxa_list = parse_vcf(vcf_file)
+
+	# Parse loci
+	aln_obj, seq_lens = parse_loci(loci_file, loci_storage, taxa_list)
+
+	# Write phylip file
+	write_to_phy(aln_obj, seq_lens, output_file)
 
 if __name__ == "__main__":
-	# Usage: python3 VCF2phy.py file.vcf
-	sequences = VCF_parser(argv[1])
-	Phylip_writer(sequences)
+	main()
