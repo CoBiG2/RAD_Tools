@@ -65,6 +65,9 @@ parser.add_argument("--hwe", dest="hwe", help="Parse a hardy-weinberg .hardy"
 parser.add_argument("--filter-hwe", dest="filter_hwe", help="Filters a vcf file"
                     " according to the hardy-weinberg .hardy file. The p-values"
                     " of the hwe test are corrected with a FDR approach.")
+parser.add_argument("--count-loci", dest="count_loci", const=True,
+                    action="store_const", help="Prints the number of loci")
+
 
 arg = parser.parse_args()
 
@@ -104,7 +107,7 @@ def weir_fst(infile, fst_threshold=None):
     plt.hist(fst_vals)
 
     f.tight_layout()
-    plt.savefig("fst_distribution.png")
+    plt.savefig("fst_distribution.pdf")
     plt.close()
 
     # Plot
@@ -113,7 +116,7 @@ def weir_fst(infile, fst_threshold=None):
     plt.plot(fst_vals, "bo")
 
     f.tight_layout()
-    plt.savefig("fst_vals.png")
+    plt.savefig("fst_vals.pdf")
 
 
 def parse_hwe(f, alpha, vcf_file):
@@ -386,7 +389,10 @@ def introgressed(vcf_file, p1, p2, fst_storage):
                 # Get genotypes for p2
                 p2_geno = [fields[taxa_list.index(x)].split(":")[0] for x in p2]
                 # Get most common allele from p2
-                p2_al = Counter("".join(p2_geno).replace("|","").replace(".","").replace("/","")).most_common(1)[0][0]
+                try:
+                    p2_al = Counter("".join(p2_geno).replace("|","").replace(".","").replace("/","")).most_common(1)[0][0]
+                except IndexError:
+                    continue
                 # Get shared alleles for each taxa in p1
                 for taxon in p1:
                     if fields[0] not in chrom_vals[taxon]:
@@ -504,6 +510,27 @@ def introgressed(vcf_file, p1, p2, fst_storage):
     fig.tight_layout()
     plt.savefig("Shared_alleles.pdf")
 
+def print_loci(vcf_file):
+    """
+    Prints the number of loci in the VCF file
+    """
+
+    vcf_fh = open(vcf_file)
+    loci = []
+
+    for line in vcf_fh:
+        if line.startswith("#"):
+            pass
+        elif line.strip() != "":
+            # Get locus number
+            l = line.split()[0]
+
+            if l not in loci:
+                loci.append(l)
+
+    print(len(loci))
+
+
 def main():
 
     # Arguments
@@ -536,5 +563,8 @@ def main():
 
     if arg.hwe:
         parse_hwe(infile, arg.hwe)
+
+    if arg.count_loci:
+        print_loci(infile)
 
 main()
