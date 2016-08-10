@@ -173,8 +173,8 @@ def write_to_phy(aln_dict, seq_lens, output_file):
 	c = 1
 
 	for l in seq_lens:
-		fh.write("DNA, p{}={}-{}\n".format(locus_n, c, c + l))
-		c += (l + 1)
+		fh.write("DNA, p{}={}-{}\n".format(locus_n, c, c + l - 1))
+		c += l
 		locus_n += 1
 
 	fh.close()
