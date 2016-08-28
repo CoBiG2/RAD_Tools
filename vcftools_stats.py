@@ -34,7 +34,7 @@ parser = argparse.ArgumentParser(description="Parsing statistical output of"
                                  " VCFtools")
 
 parser.add_argument("-in", dest="infile", help="The vcftools output file",
-                    required=True)
+                    required=True, nargs="+")
 parser.add_argument("--weir-fst", dest="weir_fst", help="Parse a Weir FST"
                     " output file. Provide a minimum fst threshold to save"
                     " loci.")
@@ -65,6 +65,13 @@ parser.add_argument("--hwe", dest="hwe", help="Parse a hardy-weinberg .hardy"
 parser.add_argument("--filter-hwe", dest="filter_hwe", help="Filters a vcf file"
                     " according to the hardy-weinberg .hardy file. The p-values"
                     " of the hwe test are corrected with a FDR approach.")
+parser.add_argument("--count-loci", dest="count_loci", const=True,
+                    action="store_const", help="Prints the number of loci")
+parser.add_argument("--het", dest="het", help="Parses one or more heterozygous"
+                    " output file from vcftools and plots them as bar plots "
+                    "side by side", const=True, action="store_const")
+
+
 
 arg = parser.parse_args()
 
@@ -104,7 +111,7 @@ def weir_fst(infile, fst_threshold=None):
     plt.hist(fst_vals)
 
     f.tight_layout()
-    plt.savefig("fst_distribution.png")
+    plt.savefig("fst_distribution.pdf")
     plt.close()
 
     # Plot
@@ -113,7 +120,7 @@ def weir_fst(infile, fst_threshold=None):
     plt.plot(fst_vals, "bo")
 
     f.tight_layout()
-    plt.savefig("fst_vals.png")
+    plt.savefig("fst_vals.pdf")
 
 
 def parse_hwe(f, alpha, vcf_file):
@@ -159,6 +166,56 @@ def parse_hwe(f, alpha, vcf_file):
                 if snp_pvals[pos] <= 0.05:
                     ofh.write(line)
 
+
+def plot_het(het_files):
+    """
+    Creates a bar plot for the heterozygous files
+    """
+
+    data = OrderedDict()
+
+    colors = ["r", "b", "green", "black" ]
+
+    # Get data from files
+    for f in het_files:
+
+        fh = open(f)
+        data[f] = OrderedDict()
+
+        # Skip first line
+        next(fh)
+
+        for line in fh:
+            try:
+                taxon = line.split()[0]
+                fis = line.strip().split()[-1]
+                data[f][taxon] = float(fis)
+            except IndexError:
+                pass
+
+        fh.close()
+
+    # Plot data
+    fig, ax = plt.subplots()
+    w = .4
+    c = 0
+
+    plt_data = []
+
+    for p, (k, v) in enumerate(data.items()):
+        plt_data.append(ax.bar(np.arange(len(v)) + c, list(v.values()),
+                               width=w, color=colors[p]))
+        c += w
+        tl = list(v.keys())
+
+    ax.set_ylabel("Fis")
+    ax.set_title("Fis values per taxon")
+    ax.set_xticks(np.arange(len(v)) + w)
+    ax.set_xticklabels(tl, rotation=45, ha="right")
+    ax.legend(plt_data, het_files, loc=0)
+
+    plt.tight_layout()
+    plt.savefig("Fis_plot.pdf")
 
 
 def singletons(infile):
@@ -386,7 +443,10 @@ def introgressed(vcf_file, p1, p2, fst_storage):
                 # Get genotypes for p2
                 p2_geno = [fields[taxa_list.index(x)].split(":")[0] for x in p2]
                 # Get most common allele from p2
-                p2_al = Counter("".join(p2_geno).replace("|","").replace(".","").replace("/","")).most_common(1)[0][0]
+                try:
+                    p2_al = Counter("".join(p2_geno).replace("|","").replace(".","").replace("/","")).most_common(1)[0][0]
+                except IndexError:
+                    continue
                 # Get shared alleles for each taxa in p1
                 for taxon in p1:
                     if fields[0] not in chrom_vals[taxon]:
@@ -504,10 +564,31 @@ def introgressed(vcf_file, p1, p2, fst_storage):
     fig.tight_layout()
     plt.savefig("Shared_alleles.pdf")
 
+def print_loci(vcf_file):
+    """
+    Prints the number of loci in the VCF file
+    """
+
+    vcf_fh = open(vcf_file)
+    loci = []
+
+    for line in vcf_fh:
+        if line.startswith("#"):
+            pass
+        elif line.strip() != "":
+            # Get locus number
+            l = line.split()[0]
+
+            if l not in loci:
+                loci.append(l)
+
+    print(len(loci))
+
+
 def main():
 
     # Arguments
-    infile = arg.infile
+    infile = arg.infile[0]
 
     if arg.weir_fst:
         weir_fst(infile, float(arg.weir_fst))
@@ -532,9 +613,16 @@ def main():
 
     if arg.filter_fst:
         fst_storage = parse_fst(arg.fst_vals, arg.filter_fst)
-        filter_fst(arg.infile, fst_storage)
+        filter_fst(infile, fst_storage)
 
     if arg.hwe:
         parse_hwe(infile, arg.hwe)
+
+    if arg.count_loci:
+        print_loci(infile)
+
+    if arg.het:
+        plot_het(arg.infile)
+
 
 main()

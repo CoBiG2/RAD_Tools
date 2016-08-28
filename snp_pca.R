@@ -22,6 +22,7 @@ genofile <- snpgdsOpen("temp.gds")
 
 # Run PCA
 pca <- snpgdsPCA(genofile, num.thread=1, autosome.only=F)
+print(pca)
 
 pc.percent<- pca$varprop * 100
 print(round(pc.percent, 2))
@@ -39,9 +40,10 @@ if (!is.na(pops_file)) {
     EV2 = pca$eigenvect[,2],
     stringsAsFactors=F)
   save(tab, file=paste(output_name, ".Rdata", sep=""))
-  plot(tab$EV1, tab$EV2, col=as.integer(tab$pop), xlab="eigenvector 1",
-    ylab="eigenvector 2")
-  legend("bottomright", legend=levels(tab$pop), pch="o", col=1:nlevels(tab$pop))
+  plot(tab$EV1, tab$EV2, col=adjustcolor(as.integer(tab$pop), alpha=.5), xlab="eigenvector 1",
+    ylab="eigenvector 2", pch=20, cell=0, cstar=0, solid=.4, cex=3,
+     clab=0, leg=T, scree.da=F, bg="white")
+  legend("topleft", legend=levels(tab$pop), pch="o", col=1:nlevels(tab$pop))
 } else {
   tab <- data.frame(sample.id = pca$sample.id,
     EV1 = pca$eigenvect[, 1],
