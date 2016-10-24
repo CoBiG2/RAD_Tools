@@ -16,22 +16,64 @@
 
 require(corrplot)
 require(ape)
-#source the baypass R functions (check PATH)
-source("~/Software/Science/baypass_2.1/utils/baypass_utils.R")
-
-# Define some variables. This is where we define local files & paths.
-baypass_executable = "~/Software/Science/baypass_2.1/sources/g_baypass"
-popname_file = "~/Desktop/Qsuber_GBS/Clust5/02-filtered_vcfs/popnames_noBul.txt"
-envfile = "~/Desktop/Qsuber_GBS/Clust5/03-R2_1/08-Baypass/ENVFILE"
-geno_file = "~/Desktop/Qsuber_GBS/Clust5/03-R2_1/08-Baypass/Qsuber_GBS_noBul.baypass"
-prefix = "Qsuber"
-num_pops = 16
-num_SNPs = 1820
-num_threads = 6
-scale_cov = TRUE # Set to false if your ENVFILE is already normalized
 
 
-# Everything below this point should be fully automated.
+## Source the baypass R functions
+
+# Full path to "baypass_utils.R" provided with baypass.
+# Type: str
+# Example: "~/Software/Science/baypass_2.1/utils/baypass_utils.R"
+source("")
+
+## Define some variables. This is where we define local files & paths.
+
+# Path to baypass binary.
+# Type: str
+# Example: "~/Software/Science/baypass_2.1/sources/g_baypass"
+baypass_executable = ""
+
+# Path to file with population names.
+# Type: str
+# Example: "~/baypass_analysis/popnames_.txt"
+popname_file = ""
+
+# Path to ENVFILE, as described in the manual.
+# Type: str
+# Example: "~/baypass_analysis/ENVFILE"
+envfile = ""
+
+# Path to geno file, as described in the manual.
+# Type: str
+# Example: "~/baypass_analysis/data.baypass"
+geno_file = ""
+
+# Results perfix, like the name of your analysis.
+# Type: str
+# Example:"Qsuber"
+prefix = ""
+
+# Number of populations.
+# Type: int
+# Example: 16
+num_pops =
+
+# Number os SNPs.
+# Type: int
+# Example: 325
+num_SNPs =
+
+# Number of threads to use.
+# Type: int
+# Example: 8
+num_threads =
+
+# Should we normalize the data on ENVFILE?
+# Type: BOOL (TRUE or FALSE)
+# Set to false if your ENVFILE is already normalized, TRUE if otherwise
+scale_cov =
+
+
+## Everything below this point should be fully automated.
 
 scalecov <- if (scale_cov) {" -scalecov "} else {""}
 
@@ -66,37 +108,37 @@ command1 = paste(baypass_executable, " -npop ", num_pops, " -gfile ",
 system(command=command1)
 
 
-#upload estimate of omega
+# upload estimate of omega
 omega=as.matrix(read.table(core_omega_file))
 pop.names = c(as.matrix(read.table(popname_file)))
 
 dimnames(omega)=list(pop.names,pop.names)
-#Compute and visualize the correlation matrix
+# Compute and visualize the correlation matrix
 cor.mat=cov2cor(omega)
 svg(filename=paste(coredir, "omega_corr.svg") )
 corrplot(cor.mat,method="color",mar=c(2,1,2,2)+0.1,
          main=expression("Correlation map based on"~hat(Omega)))
 dev.off()
 
-#Visualize the correlation matrix as hierarchical clustering tree
+# Visualize the correlation matrix as hierarchical clustering tree
 bta14.tree=as.phylo(hclust(as.dist(1-cor.mat**2)))
 svg(filename=paste(coredir, "Hier_clust_tree.svg"))
 plot(bta14.tree,type="p",
      main=expression("Hier. clust. tree based on"~hat(Omega)~"("*d[ij]*"=1-"*rho[ij]*")"))
 dev.off()
 
-#Estimates of the XtX differentiation measures
+# Estimates of the XtX differentiation measures
 anacore.snp.res=read.table(core_pi_xtx_file,h=T)
 svg(filename=paste(coredir, "XtX_diff.svg"))
 plot(anacore.snp.res$M_XtX)
 dev.off()
 
-#get estimates (post. mean) of both the a_pi and b_pi parameters of
-#the Pi Beta distribution
+# Get estimates (post. mean) of both the a_pi and b_pi parameters of
+# the Pi Beta distribution
 pi.beta.coef=read.table(core_summary_beta_params,h=T)$Mean
-#upload the original data to obtain total allele count
+# Upload the original data to obtain total allele count
 current.data<-geno2YN(geno_file)
-#Create the POD
+# Create the POD
 simu.bta<-simulate.baypass(omega.mat=omega,nsnp=num_SNPs,
                            sample.size=current.data$NN,
                            beta.pi=pi.beta.coef,pi.maf=0,suffix="btapods")
@@ -112,30 +154,30 @@ system(command=command2)
 
 
 #######################################################
-#Sanity Check: Compare POD and original data estimates
+# Sanity Check: Compare POD and original data estimates
 #######################################################
-#get estimate of omega from the POD analysis
+# Get estimate of omega from the POD analysis
 pod.omega=as.matrix(read.table(pod_mat_omega))
 svg(filename=paste(coredir, "Omega_estimate_from_POD.svg"))
 plot(pod.omega,omega) ; abline(a=0,b=1)
 dev.off()
 fmd.dist(pod.omega,omega)
 
-#get estimates (post. mean) of both the a_pi and b_pi parameters of
-#the Pi Beta distribution from the POD analysis
+# Get estimates (post. mean) of both the a_pi and b_pi parameters of
+# the Pi Beta distribution from the POD analysis
 pod.pi.beta.coef=read.table(pod_summary_beta_params,h=T)$Mean
 svg(filename=paste(coredir, "POD_estimates.svg"))
 plot(pod.pi.beta.coef,pi.beta.coef) ; abline(a=0,b=1)
 dev.off
 
 #######################################################
-#XtX calibration
+# XtX calibration
 #######################################################
-#get the pod XtX
+# Get the pod XtX
 pod.xtx=read.table(pod_summary_pi_xtx,h=T)$M_XtX
-#compute the 1% threshold
+# Compute the 1% threshold
 pod.thresh=quantile(pod.xtx,probs=0.99)
-#add the thresh to the actual XtX plot
+# Add the thresh to the actual XtX plot
 svg(filename=paste(coredir, "XtX_POD_diff.svg"))
 plot(anacore.snp.res$M_XtX)
 abline(h=pod.thresh,lty=2)
