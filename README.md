@@ -3,6 +3,24 @@
 This repository contains several tools built by CoBiG² members to help us deal with RAD and GBS data.
 The existing tools are mentioned below.
 
+## Baypass_workflow.R
+
+This script will automate the workflow for
+the awesome [BayPass](http://www1.montpellier.inra.fr/CBGP/software/baypass/)
+software by M. Gautier, which is described in
+[this paper](http://www.genetics.org/content/early/2015/10/20/genetics.115.181453).
+It does **no error handling** of any kind, nor any logging. It just automates
+the procedures outlined in the manual with some degrees of freedom.
+Please be careful when using it. It may kill your kittens and/or burn your
+house down, but worst of all, it will tend to make you lazy regarding the inner
+workings of BayPass. Please give BayPass's manual (and paper) a through read
+before using this script.
+The script takes no arguments, but all the variables you should need to edit
+are presented at the start of the script, coupled with a short description.
+
+## geste2baypass.py
+
+This script will convert a file from the GESTE format to BayPass input.
 
 ## VCF2phy
 
@@ -49,25 +67,8 @@ This script will discard any information in a .loci file that is not referenced 
 This script will remove any singleton sites from a "phylip" formatted file.
 Takes one argument - the phylip file. The output will be written to a new file
 which has the same name as the original, but with the prefix
-"_no_singletons.phy".
+"\_no_singletons.phy".
 
-## geste2baypass.py
-
-This script will convert a file from the GESTE format to Baypass input.
-
-## Baypass_workflow.R
-
-This **nasty**, **dirty** and **ugly** script will automate the workflow for
-the awesome [Bayenv](http://www1.montpellier.inra.fr/CBGP/software/baypass/)
-software by M. Gautier, which is described in
-[this paper](http://www.genetics.org/content/early/2015/10/20/genetics.115.181453).
-It does **no error handling** of any kind, nor any logging. It just automates
-the procedures outlined in the manual with some degrees of freedom.
-Please be carefull when using it. It may kill your kittens and/or burn your
-house down.
-It does not take any arguments, you have to edit every variable by hand in the
-script itself. Sorry about that. Time constraints and all that, you know the
-drill.
 
 ## correct_geste.py
 
