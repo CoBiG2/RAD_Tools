@@ -27,6 +27,10 @@ parser.add_argument("-o", dest="output_file", help="Name of output file")
 
 arg = parser.parse_args()
 
+iupac = {"AG": "R", "CT": "Y", "CG": "S", "AT": "W", "GT": "K", "AC": "M",
+         "CGT": "B", "AGT": "D", "ACT": "H", "ACG": "V", "ACGT": "N", "AA": "A",
+		 "CC": "C", "GG": "G", "TT":"T"}
+
 def parse_vcf(vcf_file):
 	"""
 	Parses the VCF file and returns a dictionary with the loci (chromossomes)
@@ -52,6 +56,70 @@ def parse_vcf(vcf_file):
 	vcf_handle.close()
 
 	return loci, taxa_list
+
+
+def convert_genotype(genotype_string, variants):
+	"""
+	Converts a genotype string from the vcf ("0|0") into an actual genotype
+	("A"), provided the variants for that particular site
+	"""
+
+	# Remove separators
+	genotype_string =  genotype_string.replace("|", "").replace("/", "").upper()
+
+	if genotype_string == "..":
+		return "N"
+
+	# Convert to actual bases
+	actual_genotype = "".join(sorted([variants[int(x)] for x in
+									  genotype_string]))
+
+	return iupac[actual_genotype]
+
+
+
+def parse_vcf_variants(vcf_file):
+	"""
+	Parses the VCF but retains the variation information. This is done when
+	converting a VCF directly to phylip without using a .loci file. The
+	resulting phylip file will contain only variable sites, though.
+	"""
+
+	vcf_handle = open(vcf_file)
+	# Will store the sequence data for each taxon in the VCF
+
+
+	for line in vcf_handle:
+
+		if line.startswith("##"):
+			pass
+
+		elif line.startswith("#CHROM"):
+			# List of taxa that will retain their order in the VCF
+			taxa_list = line.strip().split()[9:]
+			# Will store the sequence data for each taxon in the VCF
+			seq_data = dict((tx,[]) for tx in taxa_list)
+
+		# Skip empty lines and read the VCF data
+		elif line.strip() != "":
+			fields = line.strip().split()
+			# e.g. ("A","T")
+			variants = [fields[3]] + fields[4].split(",")
+			# e.g. ["0|0", ".|.", "1|1"]
+			genotypes = fields[9:]
+
+			# Add information to seq_data for each data point
+			for p,gen in enumerate(genotypes):
+
+				# get the genotype
+				genotype = convert_genotype(gen, variants)
+
+				# Get taxon
+				tx = taxa_list[p]
+
+				seq_data[tx].append(genotype)
+
+	return seq_data
 
 
 def mask_alignment(aln, var_positions):
@@ -151,6 +219,7 @@ def parse_loci(loci_file, vcf_loci, taxa_list):
 	# Finalize alignment object by converting list values into strings
 	return dict((tx, "".join(seq)) for tx, seq in total_aln.items()), seq_lens
 
+
 def write_to_phy(aln_dict, seq_lens, output_file):
 	"""
 	Writes a alignment dictionary {taxon: seq} to a phylip file
@@ -179,12 +248,42 @@ def write_to_phy(aln_dict, seq_lens, output_file):
 
 	fh.close()
 
+
+def write_vcf_variants(seq_data, output_file):
+	"""
+	Writes the variable sites of the VCF file directly to phylip format
+	"""
+
+	fh = open(output_file + ".phy", "w")
+
+	# Get number taxa
+	ntaxa = len(seq_data)
+
+	# Get alignment length
+	nlen = len(list(seq_data.values())[0])
+
+	# Write header
+	fh.write("{}\t{}\n".format(ntaxa, nlen))
+
+	# Write alignment
+	for tx, seq_list in seq_data.items():
+		fh.write("{}\t{}\n".format(tx, "".join(seq_list)))
+
+	fh.close()
+
+
 def main():
 
 	# Arguments
 	vcf_file = arg.vcf_file
 	loci_file = arg.loci_file
 	output_file = arg.output_file
+
+	if not loci_file:
+		print("Loci file not provided. Converting only variable sites in VCF.")
+		seq_data = parse_vcf_variants(vcf_file)
+		write_vcf_variants(seq_data, output_file)
+		return
 
 	# Parse VCF
 	loci_storage, taxa_list = parse_vcf(vcf_file)
