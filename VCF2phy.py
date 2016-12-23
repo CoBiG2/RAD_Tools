@@ -106,7 +106,7 @@ def parse_vcf_variants(vcf_file):
 			# e.g. ("A","T")
 			variants = [fields[3]] + fields[4].split(",")
 			# e.g. ["0|0", ".|.", "1|1"]
-			genotypes = fields[9:]
+			genotypes = [x.split(":")[0] for x in fields[9:]]
 
 			# Add information to seq_data for each data point
 			for p,gen in enumerate(genotypes):
