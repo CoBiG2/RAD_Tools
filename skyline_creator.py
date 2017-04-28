@@ -4,6 +4,8 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import sys
 import numpy as np
+from scipy.interpolate import spline
+import matplotlib.ticker as ticker
 
 
 def parse_csv(csv_file):
@@ -43,23 +45,31 @@ def skyline_plot(csv_data, output_file):
     #x_data = list(csv_data.keys())
     x_data = np.arange(len(csv_data))
 
-    median_data = [x[0] for x in csv_data.values()]
-    lower_hpd = [x[1] for x in csv_data.values()]
-    higher_hpd = [x[2] for x in csv_data.values()]
+    median_data = np.array([x[0] for x in csv_data.values()])
+    lower_hpd = np.array([x[1] for x in csv_data.values()])
+    higher_hpd = np.array([x[2] for x in csv_data.values()])
 
     plt.xticks(x_data, ["%.2E" % x for x in csv_data.keys()], rotation=45,
                ha="right")
-    ax.plot(x_data, median_data, "--", color="black")
+
+    xnew = np.linspace(x_data.min(),x_data.max(), 200)
+
+    smooth_median = spline(x_data, median_data, xnew)
+    smooth_lower = spline(x_data, lower_hpd, xnew)
+    smooth_higher = spline(x_data, higher_hpd, xnew)
+
+    ax.plot(xnew, smooth_median, "--", color="black")
     #ax.fill_between(x_data, higher_hpd, lower_hpd, facecolor="blue", alpha=0.5)
-    ax.plot(x_data, lower_hpd, color="blue")
-    ax.plot(x_data, higher_hpd, color="blue")
-    ax.fill_between(x_data, higher_hpd, lower_hpd, facecolor="blue", alpha=0.3)
+    ax.plot(xnew, smooth_lower, color="blue")
+    ax.plot(xnew, smooth_higher, color="blue")
+    ax.fill_between(xnew, smooth_higher, smooth_lower, facecolor="blue", alpha=0.3)
+
 
     plt.xlabel("Time")
     plt.ylabel("Ne")
 
     plt.tight_layout()
-    plt.savefig("%s.png" % (output_file))
+    plt.savefig("%s.svg" % (output_file))
 
 
 def main():
