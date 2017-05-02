@@ -43,7 +43,7 @@ if (!is.na(pops_file)) {
     EV2 = pca$eigenvect[,2],
     stringsAsFactors=F)
   #save(tab, file=paste(output_name, ".Rdata", sep=""))
-  p <- plot_ly(tab,  x=tab$EV1, y=tab$EV2, text=tab$sample.id, color=tab$pop)
+  p <- plot_ly(tab,  x=tab$EV1, y=tab$EV2, text=tab$sample.id, color=tab$pop, colors="Set3")
   p <- layout(p, title="PCA",
               xaxis=list(title=paste("PC 1(", round(pca$eigenval[1], d=2) , "%)")),
               yaxis=list(title=paste("PC 1(", round(pca$eigenval[2], d=2) , "%)")))
