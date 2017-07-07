@@ -30,8 +30,8 @@ That simple.
 
 ## struct_to_distruct.py
 
-This is an *ugly* script that will transform an output from [STRUCTURE](http://pritchardlab.stanford.edu/structure.html) into an input for [DISTRUCT](http://web.stanford.edu/group/rosenberglab/distruct.html).
-You **need** to have a trailing "/" at the ond of the output location, ou you'll get stragely named files in the parent directory of the one you are pointing at...
+This is an *ugly* script that will transform an output from [STRUCTURE](http://web.stanford.edu/group/pritchardlab/structure.html) into an input for [DISTRUCT](http://web.stanford.edu/group/rosenberglab/distruct.html).
+You **need** to have a trailing "/" at the end of the output location, or you'll get strangely named files in the parent directory of the one you are pointing at...
 
 
 ## Loci_counter.py
