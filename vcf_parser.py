@@ -132,7 +132,7 @@ def filter_random_snp(vcf_file):
             elif line.strip() != "":
 
                 # Get chrom number
-                chrom = int(line.split()[0])
+                chrom = line.split()[0]
 
                 if chrom != current_chrom and loci_snps != []:
                     choosen = random.choice(loci_snps)

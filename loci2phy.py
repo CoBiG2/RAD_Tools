@@ -68,7 +68,7 @@ def loci_parser(loci_filename, loci, seqnames):
             seqlen = len(seqlines[1])
             totlen += seqlen
             seqlens.append(totlen)
-            
+
             difset = vcfseqs.difference(taxaset)
 
             for t in difset:
@@ -102,7 +102,7 @@ def loci_parser(loci_filename, loci, seqnames):
 
 def phy_writer(phy_filename, seqnames, seqlens):
     """Writes the output ready to submit to RAxML or other phylogeny
-    programs, along with a partitions file. Based on seqnames dict 
+    programs, along with a partitions file. Based on seqnames dict
     {seqname: sequence} and on [seqlens]"""
     phy = open(phy_filename, 'w')
 
@@ -113,11 +113,11 @@ def phy_writer(phy_filename, seqnames, seqlens):
         phy.write(k + "\t" + v + "\n")
 
     phy.close()
-    
+
     part = open(phy_filename[:-4] + ".part", 'w')
     for counts in list(range(len(seqlens)))[:-1]:
         part.write("DNA, p" + str(counts + 1) + "=" + str(seqlens[counts] + 1) + "-" + str(seqlens[counts + 1]) + "\n")
-    
+
     part.close()
 
 def fas_writer(fas_filename, seqnames):

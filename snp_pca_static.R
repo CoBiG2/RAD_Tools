@@ -34,9 +34,10 @@ pdf(paste(output_name, ".pdf", sep=""))
 # Plots PCA
 if (!is.na(pops_file)) {
   sample.id <- read.gdsn(index.gdsn(genofile, "sample.id"))
-  pop_code <- scan(pops_file, what=character())
+  pop_code <- read.table(pops_file, sep="\t")
+  sorted_pops <- pop_code$V2[order(match(pop_code$V1, sample.id))]
   tab <- data.frame(sample.id = pca$sample.id,
-    pop = factor(pop_code)[match(pca$sample.id, sample.id)],
+    pop = sorted_pops,
     EV1 = pca$eigenvect[,1],
     EV2 = pca$eigenvect[,2],
     stringsAsFactors=F)

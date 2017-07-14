@@ -40,3 +40,7 @@ pdf(paste(output_file, "_dapc.pdf", sep=""))
 scatter(dapc1, scree.da=F, bg="white", pch=20, cell=0, cstar=0,
         solid=.4, cex=3, clab=0, leg=T,
         txt.leg=paste("Cluster", 1:length(grp$size)))
+
+# BW version
+#scatter(dapc1, scree.da=F, bg="white", pch=c(5,7, 6), cell=0, cstar=0,
+#         solid=.4, cex=2, clab=0, leg=T, col="grey", lwd=2)

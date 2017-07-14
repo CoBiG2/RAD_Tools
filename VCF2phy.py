@@ -51,7 +51,7 @@ def parse_vcf(vcf_file):
 
 		elif line.strip() != "":
 			fields = line.strip().split()
-			loci[int(fields[0])].append(int(fields[1]) - 1)
+			loci[int(fields[0].split("_")[-1])].append(int(fields[1]) - 1)
 
 	vcf_handle.close()
 
@@ -164,8 +164,6 @@ def parse_loci(loci_file, vcf_loci, taxa_list):
 
 	fh = open(loci_file)
 
-	# Keeps track of current locus
-	locus = 1
 	current_aln = OrderedDict()
 
 	# Keeps track of the sequence lenght for each loci. For the partitions file.
@@ -176,42 +174,37 @@ def parse_loci(loci_file, vcf_loci, taxa_list):
 
 	for line in fh:
 
-		if line.startswith("//") and locus not in vcf_loci:
+		if line.startswith("//"):
+
+			# Get locus number
+			locus = int(line.split("|")[1]) + 1
 
 			print("\rParsing alignment {}".format(locus), end="")
+
+			if locus in vcf_loci:
+
+				if current_aln:
+					masked_aln = mask_alignment(current_aln, vcf_loci[locus])
+					current_len = len(list(masked_aln.values())[0])
+
+					# Append masking result to total alignment
+					for tx in taxa_list:
+						try:
+							total_aln[tx].append(masked_aln[tx])
+						except KeyError:
+							total_aln[tx].append("n" * current_len)
+
+					seq_lens.append(current_len)
+
 			current_aln = OrderedDict()
 
-			locus += 1
-
-		if line.startswith("//") and locus in vcf_loci:
-
-			print("\rParsing alignment {}".format(locus), end="")
-
-			# If an alignment has already been set, do masking routine
-			if current_aln:
-				masked_aln = mask_alignment(current_aln, vcf_loci[locus])
-				current_len = len(list(masked_aln.values())[0])
-
-				# Append masking result to total alignment
-				for tx in taxa_list:
-					try:
-						total_aln[tx].append(masked_aln[tx])
-					except KeyError:
-						total_aln[tx].append("n" * current_len)
-
-				seq_lens.append(current_len)
-
-				# Up counter
-				locus += 1
-
-
 		# Loci present in VCF. Begin alignment parsing routine
-		elif locus in vcf_loci:
-			# Get alignment
+		elif line.strip() != "":
+		# Get alignment
 
 			fields = line.strip().split()
 			# Removes ">" from taxon name
-			taxon = fields[0][1:]
+			taxon = fields[0]
 			current_aln[taxon] = fields[1]
 
 	fh.close()

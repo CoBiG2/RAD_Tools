@@ -19,6 +19,7 @@
 # -in option and then specify the type of statistical output it is with a
 # second argument
 
+import pickle
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -419,6 +420,9 @@ def introgressed(vcf_file, p1, p2, fst_storage):
     # (False) or not (True)
     flag = True
 
+    # List of introgressed SNPs
+    int_snps = []
+
     for line in vcf_fh:
         if line.startswith("##"):
             if arg.remove_int:
@@ -461,10 +465,14 @@ def introgressed(vcf_file, p1, p2, fst_storage):
                         het_taxa_storage[taxon] += 1
                         chrom_vals[taxon][fields[0]].append(1)
                         introgressed_chroms[taxon].append(fields[0])
+                        if loc_pos not in int_snps:
+                            int_snps.append(loc_pos)
                     elif al_count == 2:
                         hom_taxa_storage[taxon] += 1
                         chrom_vals[taxon][fields[0]].append(1)
                         introgressed_chroms[taxon].append(fields[0])
+                        if loc_pos not in int_snps:
+                            int_snps.append(loc_pos)
                     else:
                         chrom_vals[taxon][fields[0]].append(0)
 
@@ -473,6 +481,8 @@ def introgressed(vcf_file, p1, p2, fst_storage):
 
             # Reset flag value for next iteration
             flag = True
+
+    print("Detected {} SNPs with shared alleles".format(len(set(int_snps))))
 
     # This piece of code is highly ad-hoc to the three Hv taxa with putatively
     # introgressed signals.
@@ -548,8 +558,8 @@ def introgressed(vcf_file, p1, p2, fst_storage):
     # Homozygous data
     hom_data = [x for x in hom_taxa_storage.values()]
 
-    bar1 = ax1.bar(ind, het_data, w, color="blue")
-    bar2 = ax1.bar(ind, hom_data, w, color="green", bottom=het_data)
+    bar1 = ax1.bar(ind, het_data, w, color="#d9b19c")
+    bar2 = ax1.bar(ind, hom_data, w, color="#c4d99c", bottom=het_data)
 
     plt.xticks(ind + w / 2., p1, rotation=45, ha="right")
     ax1.set_xlabel("Taxa")
@@ -563,6 +573,10 @@ def introgressed(vcf_file, p1, p2, fst_storage):
 
     fig.tight_layout()
     plt.savefig("Shared_alleles.pdf")
+
+    pickle.dump(het_taxa_storage, open("het.data", "wb"))
+    pickle.dump(hom_taxa_storage, open("hom.data", "wb"))
+    pickle.dump(perc_data, open("perc.data", "wb"))
 
 def print_loci(vcf_file):
     """

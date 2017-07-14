@@ -343,6 +343,19 @@ def plot_single_assembly(total_loci, stats, output_name):
                           allele_error_rate, snp_error_rate]):
         data[titles[i]] = [[x[1] for x in l], [x[0] for x in l]]
 
+    # Create table
+    table_fh = open(output_name + ".csv", "w")
+
+    # Write header
+    table_fh.write(";".join([x for x in [""] + data["Total locus error"][1]]) + "\n")
+
+    for k, val in data.items():
+        data_str = ";".join(str(x) for x in [k] + val[0]) + "\n"
+        table_fh.write(data_str)
+
+    table_fh.close()
+
+
     # Plot data
     for (k, val), a in zip(data.items(), [x for y in ax for x in y]):
         a.set_title(k)
