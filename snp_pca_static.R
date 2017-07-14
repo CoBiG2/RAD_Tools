@@ -41,19 +41,16 @@ if (!is.na(pops_file)) {
     EV1 = pca$eigenvect[,1],
     EV2 = pca$eigenvect[,2],
     stringsAsFactors=F)
-  cls <-brewer.pal(n = 12, name = "Set3")
-  print(cls)
-  print(as.integer(tab$pop))
+  cls <-rep(brewer.pal(n = 12, name = "Set3"), times=5)
+  pch_v <- rep(c(16, 15, 17, 18), each=12)
   save(tab, file=paste(output_name, ".Rdata", sep=""))
+  par(mar =  c(5, 4, 4, 6) + 1.8)
   plot(tab$EV1, tab$EV2, col=cls[as.integer(tab$pop)], xlab="eigenvector 1",
-    ylab="eigenvector 2", pch=20, cell=0, cstar=0, solid=.4, cex=3, colors=cls,
-     clab=0, leg=T, scree.da=F, bg="white")
+    ylab="eigenvector 2", pch=pch_v[as.numeric(tab$pop)], solid=.2, cex=1,
+    clab=1, leg=T, bg="white")
 
-#  plot(tab$EV1, tab$EV2, pch=as.numeric(tab$pop)+4, xlab="eigenvector 1",
-#    ylab="eigenvector 2", col="darkgrey",cex=2, lwd=2,
-#     leg=T, scree.da=F)
-
-  legend("topleft", legend=levels(tab$pop), pch=20, col=cls[0:tab$pop+1])
+  legend("topright", inset=c(-0.35,0), legend=levels(tab$pop), pch=pch_v, col=cls[0:length(tab$pop)], xpd = TRUE)
+  print(cls[as.numeric(sorted_pops)])
 } else {
   tab <- data.frame(sample.id = pca$sample.id,
     EV1 = pca$eigenvect[, 1],
