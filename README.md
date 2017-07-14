@@ -83,6 +83,22 @@ Each line should start with the population name, followed by ":" followed by the
 
 This script requires the [PyVCF](https://github.com/jamescasbon/PyVCF) pacakge
 
+## snp_pca.R / snp_pca_static.R
+
+Script to perform a PCA based on a VCF file.
+It will optionally take a "populations" file to gather individuals into populations. This is a `TAB` separated file where each line contains the individual name and the respective population. It will look somewhat like this:
+
+```
+
+Indiv1  Pop1
+Indiv2  Pop1
+Indiv3  Pop2
+Indiv4  Pop2
+
+```
+
+The "static" version will produce a `PDF`, whereas the "non-static" will produce a plotly HTML file.
+
 ## License
 
 Everything is under the GPLv3.
