@@ -51,6 +51,7 @@ if (!is.na(pops_file)) {
 
   legend("topright", inset=c(-0.35,0), legend=levels(tab$pop), pch=pch_v, col=cls[0:length(tab$pop)], xpd = TRUE)
   print(cls[as.numeric(sorted_pops)])
+  
 } else {
   tab <- data.frame(sample.id = pca$sample.id,
     EV1 = pca$eigenvect[, 1],
