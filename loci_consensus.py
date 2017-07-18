@@ -82,7 +82,7 @@ def create_consensus(loci_file, output_file):
 
         if line.strip().startswith("//") and locus_storage:
             # Get locus number
-            locus_number = line.split("|")[-1].strip()
+            locus_number = line.split("|")[-2].strip()
             # Get sequence consensus
             con_seq = consensus(locus_storage)
             # Write to output
