@@ -28,6 +28,9 @@ PARSER.add_argument("-in", dest="loci_file", help="Provide the path to .loci "
                     "file", required=True)
 PARSER.add_argument("-o", dest="output_file", help="Name of the output"
                     " file containing the consensus sequences")
+PARSER.add_argument("-l", dest="loci_list_file",
+                    help="Provide the path to file with loci numbers.",
+                    default=None)
 
 ARG = PARSER.parse_args()
 
@@ -65,7 +68,38 @@ def consensus(sequence_list):
     return con
 
 
-def create_consensus(loci_file, output_file):
+def list_parser(list_filename):
+    """
+    Parses a file with a loci list (one entry per line).
+    Returns a set with the loci numbers on the list.
+    """
+    loci_file = open(list_filename, "r")
+    loci_set = set()
+    for lines in loci_file:
+        lines = int(lines.strip()) - 1
+        loci_set.add(str(lines))
+
+    loci_file.close()
+
+    return loci_set
+
+
+def standard_write(output_handle, locus_number, con_seq, loci_set):
+    """
+    Standard fasta writter function. To be used when no loci list is provided.
+    """
+    output_handle.write(">locus{}\n{}\n".format(locus_number, con_seq))
+
+
+def conditional_write(output_handle, locus_number, con_seq, loci_set):
+    """
+    Writter function to be used when a loci list is provided.
+    """
+    if locus_number in loci_set:
+        output_handle.write(">locus{}\n{}\n".format(locus_number, con_seq))
+
+
+def create_consensus(loci_file, output_file, loci_list_file):
     """
     The parsing of the .loci file and creation and writting of consensus
     sequences to output_file are performed together to improve performance.
@@ -77,6 +111,13 @@ def create_consensus(loci_file, output_file):
     loci_handle = open(loci_file)
     output_handle = open(output_file, "w")
 
+    if loci_list_file is not None:
+        loci_set = list_parser(loci_list_file)
+        writer_func = conditional_write
+    else:
+        loci_set = None
+        writer_func = standard_write
+
     locus_storage = []
 
     for line in loci_handle:
@@ -87,7 +128,7 @@ def create_consensus(loci_file, output_file):
             # Get sequence consensus
             con_seq = consensus(locus_storage)
             # Write to output
-            output_handle.write(">locus{}\n{}\n".format(locus_number, con_seq))
+            writer_func(output_handle, locus_number, con_seq, loci_set)
 
             # Reset locus storage. Ready for next locus
             locus_storage = []
@@ -95,12 +136,14 @@ def create_consensus(loci_file, output_file):
         else:
             locus_storage.append(line.split()[-1].strip())
 
+
 def main():
     # Args
     loci_file = ARG.loci_file
     output_file = ARG.output_file
+    loci_list_file = ARG.loci_list_file
 
-    create_consensus(loci_file, output_file)
+    create_consensus(loci_file, output_file, loci_list_file)
 
 
 main()
