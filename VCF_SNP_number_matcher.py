@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
-# Usage:python3 VCF_corresponder.py loci_list.txt infile.vcf > loci_list_matching_vcf.txt
+# Usage:python3 VCF_corresponder.py loci_list.txt infile.vcf > \
+# loci_list_matching_vcf.txt
 
 
 def vcf_parser(vcf_filename, loci_set):
@@ -34,6 +35,7 @@ def list_parser(loci_list_filename):
     loci_file.close()
 
     return loci_set
+
 
 if __name__ == "__main__":
     from sys import argv
