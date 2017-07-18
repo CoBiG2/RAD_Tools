@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 # Copyright 2015 Diogo N. Silva <o.diogosilva@gmail.com>
+# Copyright 2017 Francisco Pina-Martins <f.pinamartins@gmail.com>
 # compare_pairs.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -20,17 +21,17 @@
 
 import argparse
 
-parser = argparse.ArgumentParser(description="Creates a consensus sequence for"
+PARSER = argparse.ArgumentParser(description="Creates a consensus sequence for"
                                              " each locus in a .loci file")
 
-parser.add_argument("-in", dest="loci_file", help="Provide the path to .loci "
+PARSER.add_argument("-in", dest="loci_file", help="Provide the path to .loci "
                     "file", required=True)
-parser.add_argument("-o", dest="output_file", help="Name of the output"
+PARSER.add_argument("-o", dest="output_file", help="Name of the output"
                     " file containing the consensus sequences")
 
-arg = parser.parse_args()
+ARG = PARSER.parse_args()
 
-iupac = {"AG": "R", "CT": "Y", "CG": "S", "AT": "W", "GT": "K", "AC": "M",
+IUPAC = {"AG": "R", "CT": "Y", "CG": "S", "AT": "W", "GT": "K", "AC": "M",
          "CGT": "B", "AGT": "D", "ACT": "H", "ACG": "V", "ACGT": "N"}
 
 
@@ -57,7 +58,7 @@ def consensus(sequence_list):
         elif len(column) > 1:
             try:
                 amb = "".join(sorted(column))
-                con += iupac[amb]
+                con += IUPAC[amb]
             except KeyError:
                 con += "N"
 
@@ -96,8 +97,8 @@ def create_consensus(loci_file, output_file):
 
 def main():
     # Args
-    loci_file = arg.loci_file
-    output_file = arg.output_file
+    loci_file = ARG.loci_file
+    output_file = ARG.output_file
 
     create_consensus(loci_file, output_file)
 
