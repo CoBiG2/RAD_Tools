@@ -89,7 +89,8 @@ def parse_outliers(outlier_filename):
         if lines == "":
             break
         else:
-            loci.add(int(lines.strip()))
+            lines = lines.strip().split()[1:]
+            [loci.add(int(x)) for x in lines]
 
     infile.close()
     return loci
@@ -116,22 +117,21 @@ def parse_vcf(vcf_filename, outliers, goal):
     """
     infile = open(vcf_filename, 'r')
     counter = 0
-    names = set()
     for lines in infile:
         lines = lines.strip()
         if lines.startswith("#") and goal != "fasta":
             print(lines)
         else:
-            counter += 1
             if counter not in outliers and goal == "neutral":
                 print(lines)
             elif counter in outliers and goal == "selection":
                 print(lines)
             elif counter in outliers and goal == "fasta":
-                names.add(lines.split()[0])
+                print(lines.split()[0])
+            if not lines.startswith("#"):
+                counter += 1
 
     infile.close()
-    return names
 
 
 def runner(arg):
@@ -148,8 +148,7 @@ def runner(arg):
         assocs = parse_associations(arg.assoc_loci)
         loci_set = loci_set.union(assocs)
 
-    names = parse_vcf(arg.vcf_filename, loci_set, arg.main_op)
-    print(names)
+    parse_vcf(arg.vcf_filename, loci_set, arg.main_op)
 
 
 def main():
