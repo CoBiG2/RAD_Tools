@@ -148,7 +148,10 @@ def runner(arg):
 
     if arg.assoc_loci is not None:
         assocs = parse_associations(arg.assoc_loci)
-        loci_set = loci_set.union(assocs)
+        if loci_set is None:
+            loci_set = assocs
+        else:
+            loci_set = loci_set.union(assocs)
 
     parse_vcf(arg.vcf_filename, loci_set, arg.main_op)
 
