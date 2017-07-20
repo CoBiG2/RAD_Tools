@@ -70,9 +70,6 @@ def argument_parser(args):
     io_opts.add_argument("-a", dest="assoc_loci", type=str, default=None,
                          metavar="path to associations summary",
                          help="Path to assocaitions summary file.")
-    io_opts.add_argument("-l", dest="loci_filename", type=str, required=True,
-                         metavar="loci",
-                         help="Location of the loci file to filter.")
 
     # ################### END OF SPECIFIC CODE ###############################
     arguments = parser.parse_args(args)
