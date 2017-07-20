@@ -118,7 +118,7 @@ def parse_vcf(vcf_filename, outliers, goal):
     Parses a vcf file and prints only the lines not in the outliers set.
     """
     infile = open(vcf_filename, 'r')
-    counter = 0
+    counter = 1
     for lines in infile:
         lines = lines.strip()
         if lines.startswith("#") and goal != "fasta":
@@ -140,11 +140,14 @@ def runner(arg):
     """
     Manages what gets run and runs it.
     """
-    loci_set = set()
+    loci_set = None
     if arg.outlier_loci is not None:
         for loci_list in arg.outlier_loci:
             outliers = parse_outliers(loci_list)
-            loci_set = loci_set.intersection(outliers)
+            if loci_set is None:
+                loci_set = outliers
+            else:
+                loci_set = loci_set.intersection(outliers)
 
     if arg.assoc_loci is not None:
         assocs = parse_associations(arg.assoc_loci)
