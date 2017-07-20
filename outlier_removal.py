@@ -142,7 +142,7 @@ def runner(arg):
     if arg.outlier_loci is not None:
         for loci_list in arg.outlier_loci:
             outliers = parse_outliers(loci_list)
-            loci_set = loci_set.union(outliers)
+            loci_set = loci_set.intersection(outliers)
 
     if arg.assoc_loci is not None:
         assocs = parse_associations(arg.assoc_loci)
