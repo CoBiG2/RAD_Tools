@@ -3,12 +3,14 @@
 import argparse
 import sys
 
+
 def argument_parser(args):
     """
     Parses the list of arguments as implemented in argparse.
     """
     parser = argparse.ArgumentParser(
-        description="A script to filter .VCF and .loci files based on loci list files.",
+        description="A script to filter .VCF and .loci files based on loci list"
+                    " files.",
         formatter_class=argparse.RawTextHelpFormatter)
 
     # Create subparsers for each main operation
@@ -24,7 +26,7 @@ def argument_parser(args):
                                             "file with the sequences of "
                                             "loci under selection.")
 
-    # ####################### Neutral VCF ARGUMENTS ################################
+    # ###################### Neutral VCF ARGUMENTS #############################
     # Group definition
     io_opts = neutral_vcf.add_argument_group("Input/Output options")
 
@@ -33,13 +35,13 @@ def argument_parser(args):
                          help="Location of the VCF file to filter.")
     io_opts.add_argument("-o", dest="outlier_loci", type=str, nargs="+",
                          metavar="list of files", default=None,
-                         help="Path to outlier loci lists. Can provide more than "
-                              "one file path.")
+                         help="Path to outlier loci lists. Can provide more "
+                         "than one file path.")
     io_opts.add_argument("-a", dest="assoc_loci", type=str, default=None,
                          metavar="path to associations summary",
                          help="Path to assocaitions summary file.")
 
-    # ####################### Selection VCF ARGUMENTS ##############################
+    # ###################### Selection VCF ARGUMENTS ###########################
     # Group definition
     io_opts = selection_vcf.add_argument_group("Input/Output options")
 
@@ -48,13 +50,13 @@ def argument_parser(args):
                          help="Location of the VCF file to filter.")
     io_opts.add_argument("-o", dest="outlier_loci", type=str, nargs="+",
                          metavar="list of files", default=None,
-                         help="Path to outlier loci lists. Can provide more than "
-                              "one file path.")
+                         help="Path to outlier loci lists. Can provide more "
+                         " than one file path.")
     io_opts.add_argument("-a", dest="assoc_loci", type=str, default=None,
                          metavar="path to associations summary",
                          help="Path to assocaitions summary file.")
 
-    # #################### Selection FASTA ARGUMENTS #############################
+    # ################### Selection FASTA ARGUMENTS ############################
     # Group definition
     io_opts = selection_fasta.add_argument_group("Input/Output options")
 
@@ -63,8 +65,8 @@ def argument_parser(args):
                          help="Location of the VCF file to filter.")
     io_opts.add_argument("-o", dest="outlier_loci", type=str, nargs="+",
                          metavar="list of files", default=None,
-                         help="Path to outlier loci lists. Can provide more than "
-                              "one file path.")
+                         help="Path to outlier loci lists. Can provide more "
+                         " than one file path.")
     io_opts.add_argument("-a", dest="assoc_loci", type=str, default=None,
                          metavar="path to associations summary",
                          help="Path to assocaitions summary file.")
