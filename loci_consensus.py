@@ -88,7 +88,8 @@ def standard_write(output_handle, locus_number, con_seq, loci_set):
     """
     Standard fasta writter function. To be used when no loci list is provided.
     """
-    output_handle.write(">locus{}\n{}\n".format(locus_number, con_seq))
+    locus_name = str(int(locus_number) + 1)
+    output_handle.write(">vcf_locus{}\n{}\n".format(locus_name, con_seq))
 
 
 def conditional_write(output_handle, locus_number, con_seq, loci_set):
@@ -96,7 +97,8 @@ def conditional_write(output_handle, locus_number, con_seq, loci_set):
     Writter function to be used when a loci list is provided.
     """
     if locus_number in loci_set:
-        output_handle.write(">locus{}\n{}\n".format(locus_number, con_seq))
+        locus_name = str(int(locus_number) + 1)
+        output_handle.write(">vcf_locus{}\n{}\n".format(locus_name, con_seq))
 
 
 def create_consensus(loci_file, output_file, loci_list_file):
