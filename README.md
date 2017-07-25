@@ -99,6 +99,10 @@ Indiv4  Pop2
 
 The "static" version will produce a `PDF`, whereas the "non-static" will produce a plotly HTML file.
 
+## bl_gff_2_annotation.py
+
+Script to filter annotations on a GFF file based on the contents of a tabular blast output.
+
 ## License
 
 Everything is under the GPLv3.
