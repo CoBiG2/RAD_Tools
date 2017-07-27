@@ -126,7 +126,7 @@ def parse_vcf(vcf_filename, outliers, goal):
             elif counter in outliers and goal == "selection":
                 print(lines)
             elif counter in outliers and goal == "fasta":
-                print(lines.split()[0])
+                print("{0}\t{1}".format(lines.split()[0], counter))
             if not lines.startswith("#"):
                 counter += 1
 

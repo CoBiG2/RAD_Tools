@@ -74,10 +74,10 @@ def list_parser(list_filename):
     Returns a set with the loci numbers on the list.
     """
     loci_file = open(list_filename, "r")
-    loci_set = set()
+    loci_set = {}
     for lines in loci_file:
-        lines = int(lines.strip()) - 1
-        loci_set.add(str(lines))
+        lines = lines.strip().split()
+        loci_set[str(int(lines[0]) - 1)] = lines[1]
 
     loci_file.close()
 
@@ -98,7 +98,10 @@ def conditional_write(output_handle, locus_number, con_seq, loci_set):
     """
     if locus_number in loci_set:
         locus_name = str(int(locus_number) + 1)
-        output_handle.write(">vcf_locus{}\n{}\n".format(locus_name, con_seq))
+        output_handle.write(">vcf_locus{0}#{1}\n{2}"
+                            "\n".format(locus_name,
+                                        loci_set[locus_number],
+                                        con_seq))
 
 
 def create_consensus(loci_file, output_file, loci_list_file):
