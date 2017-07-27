@@ -38,6 +38,10 @@ def gff_parser(gff_filename, blast_data):
     provided in the BLAST data dictionary.
     Prints the output in the process.
     """
+    # Print the header
+    print("SNP_name\tScaffold name\tSequence length\tevalue\tidentity\tmatch "
+          "length\tscaffold start\tscaffold end\tdatabase reference\tNote\t"
+          "GO term")
     infile = open(gff_filename, "r")
     for lines in infile:
         lines = lines.strip().split("\t")
