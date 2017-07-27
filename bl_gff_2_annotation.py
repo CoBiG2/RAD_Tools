@@ -56,6 +56,7 @@ def gff_parser(gff_filename, blast_data):
                                 "\t".join(blast_data[lines[0]][1:]),
                                 "\t".join(annot)))
 
+
 if __name__ == "__main__":
     from sys import argv
     BLAST_DATA = blast_tab_parser(argv[1])
