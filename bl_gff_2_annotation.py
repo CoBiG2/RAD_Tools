@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with Loci_counter. If not, see <http://www.gnu.org/licenses/>.
 
+from collections import OrderedDict
+
 
 def blast_tab_parser(blast_tab_filename):
     """
@@ -52,13 +54,19 @@ def gff_parser(gff_filename, blast_data):
             if min(seq_range) > min(annot_range) and \
                     max(seq_range) < max(annot_range):
                 annot = lines[8].split(";")
-                tags = ("dbxref", "note", "ontology")
-                annot = [x for x in annot if x.lower().startswith(tags)]
-                print("{0}\t{1}\t{2}\t{3}"
-                      "".format(blast_data[lines[0]][0],
-                                lines[0],
-                                "\t".join(blast_data[lines[0]][1:]),
-                                "\t".join(annot)))
+                tags = OrderedDict([("dbxref", ""),
+                                    ("note", ""),
+                                    ("ontology_term", "")])
+                for param in annot:
+                    if param.lower().startswith(tuple(tags.keys())):
+                        tags[param[:param.index("=")].lower()] = param
+                annot = [x for x in tags.values()]
+                if tags["note"] != "":
+                    print("{0}\t{1}\t{2}\t{3}"
+                          "".format(blast_data[lines[0]][0],
+                                    lines[0],
+                                    "\t".join(blast_data[lines[0]][1:]),
+                                    "\t".join(annot)))
 
 
 if __name__ == "__main__":
