@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Copyright 2015 Diogo N. Silva <o.diogosilva@gmail.com>
-# Copyright 2017 Francisco Pina-Martins <f.pinamartins@gmail.com>
+# Copyright 2017-2018 Francisco Pina-Martins <f.pinamartins@gmail.com>
 # compare_pairs.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
@@ -20,6 +20,7 @@
 
 
 import argparse
+import re
 
 PARSER = argparse.ArgumentParser(description="Creates a consensus sequence for"
                                              " each locus in a .loci file")
@@ -77,7 +78,8 @@ def list_parser(list_filename):
     loci_set = {}
     for lines in loci_file:
         lines = lines.strip().split()
-        loci_set[str(int(lines[0]) - 1)] = lines[1]
+        locus_num_id = int(re.search(r"\d+$", lines[0]).group()) - 1
+        loci_set[str(locus_num_id)] = lines[1]
 
     loci_file.close()
 

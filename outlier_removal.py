@@ -112,7 +112,8 @@ def parse_associations(association_summary_filename):
 
 def parse_vcf(vcf_filename, outliers, goal):
     """
-    Parses a vcf file and prints only the lines not in the outliers set.
+    Parses a vcf file and prints only the requested lines (either only neutral
+    or only under selection)
     """
     infile = open(vcf_filename, 'r')
     counter = 1
@@ -120,6 +121,8 @@ def parse_vcf(vcf_filename, outliers, goal):
         lines = lines.strip()
         if lines.startswith("#") and goal != "fasta":
             print(lines)
+        elif lines.startswith("#") and goal == "fasta":
+            continue
         else:
             if counter not in outliers and goal == "neutral":
                 print(lines)
