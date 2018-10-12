@@ -33,6 +33,7 @@ def vcf_parser(vcf_filename, group_split_point):
             locus = lines[0]
             data = lines[8:]
             groups = []
+            freqs = []
             groups.append(data[:group_split_point])
             groups.append(data[group_split_point:])
-            
+            abs_freqs = [re.match(".*:", x) for x in groups[0]]
