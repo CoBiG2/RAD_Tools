@@ -17,8 +17,11 @@
 # This script will compare two groups of individuals and highlight any
 # loci that segregate both groups
 
+# Usage: python3 segregating_loci_finder.py /path/to/file.vcf \
+# number_of_1st_group_individuals(int)
+
 import re
-from collections import Counter, OrderedDict
+from collections import Counter
 
 
 def vcf_parser(vcf_filename, group_split_point):
@@ -90,6 +93,6 @@ def segregating_freqs(loci):
 
 if __name__ == "__main__":
     from sys import argv
-    seg_loci = vcf_parser(argv[1], argv[2])
-    for i in segregating_freqs(seg_loci):
+    SEG_LOCI = vcf_parser(argv[1], argv[2])
+    for i in segregating_freqs(SEG_LOCI):
         print(i)
