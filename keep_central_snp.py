@@ -15,22 +15,22 @@
 # along with keep_central_snps. If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import sys
 
-parser = argparse.ArgumentParser(prog='python3')
-
-parser.add_argument("input", metavar="input.vfc", type=str,
-                    help="VCF file with all the SNPs.")
-
-parser.add_argument("-o","--output", metavar="output.vcf", dest="output", type=str,
-                    help="output file with the SNPs closest to the centre of each locus")
-
-parser.add_argument("-l","--len", metavar="int", dest="length", type=str,
-                    help="length of each locus")
-
-args = parser.parse_args()
-input1= args.input
-input2= args.output
-input3= args.length
+def get_args(args):
+    parser = argparse.ArgumentParser(prog='python3')
+    
+    parser.add_argument("input", metavar="input.vfc", type=str,
+                        help="VCF file with all the SNPs.")
+    
+    parser.add_argument("-o","--output", metavar="output.vcf", dest="output", type=str,
+                        help="output file with the SNPs closest to the centre of each locus")
+    
+    parser.add_argument("-l","--len", metavar="int", dest="length", type=str,
+                        help="length of each locus")
+    
+    arguments = parser.parse_args(args)
+    return arguments
 
 def write_vcf_headers(vcf_path,output_path):
     vcf_file= open(vcf_path,"r")
@@ -38,7 +38,9 @@ def write_vcf_headers(vcf_path,output_path):
     
     for line in vcf_file:
         if line.startswith("#"):
-            out_file.write(line) 
+            out_file.write(line)
+        else:
+            break
     
     vcf_file.close()
     out_file.close()
@@ -79,5 +81,7 @@ def write_vcf_body(vcf_path,output_path,locus_length):
     vcf_file.close()        
     out_file.close()
 
-write_vcf_headers(input1,input2)
-write_vcf_body(input1,input2,input3)     
+if __name__ == "__main__":
+    args= get_args(sys.argv[1:])
+    write_vcf_headers(args.input,args.output)
+    write_vcf_body(args.input,args.output,args.length)     
