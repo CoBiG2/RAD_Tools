@@ -24,10 +24,10 @@ def get_args(args):
                         help="VCF file with all the SNPs.")
     
     parser.add_argument("-o","--output", metavar="output.vcf", dest="output", type=str,
-                        help="output file with the SNPs closest to the centre of each locus")
+                        help="output file with the SNPs closest to the centre of each locus (default = ./center_snps_filtered.vcf)")
     
     parser.add_argument("-l","--len", metavar="int", dest="length", type=str,
-                        help="length of each locus")
+                        help="length of each locus (required)", required= True)
     
     arguments = parser.parse_args(args)
     return arguments
@@ -83,5 +83,9 @@ def write_vcf_body(vcf_path,output_path,locus_length):
 
 if __name__ == "__main__":
     args= get_args(sys.argv[1:])
-    write_vcf_headers(args.input,args.output)
-    write_vcf_body(args.input,args.output,args.length)     
+    try:
+        write_vcf_headers(args.input,args.output)
+        write_vcf_body(args.input,args.output,args.length)
+    except: 
+        write_vcf_headers(args.input,"central_snps_filtered.vcf")
+        write_vcf_body(args.input,"central_snps_filtered.vcf",args.length)  
