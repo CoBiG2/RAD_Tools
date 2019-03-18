@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Mar 14 14:04:41 2019
 
-@author: duartb
-"""
+# Copyright 2019 Duarte Teomoteo Balata <duarte.balata@gmail.com>
+# filter_replicates_vcf.py is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# filter_replicates_vcf is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with keep_central_snps. If not, see <http://www.gnu.org/licenses/>.
+
 import argparse
 
 parser = argparse.ArgumentParser(prog='python3')
@@ -23,17 +32,30 @@ missing_ratio= arguments.missing_data_percentage/100
 
 def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
     
+    # keeps track of the number of loci that are not considered missing data
     non_missing=0
+    # keeps track of the number of loci that are considered missing data
     missing=0
+    # keeps track of the number of loci that are deleted
+    deleted_loci=0
+    # keeps track of the total number of loci
+    loci=0
+       
+    genes=[]
     
+    # opens input vcf file
     vcf_file = open(vcf_input,"r")
+    
+    # open file with the replicate names association
     replicates_file = open(replicates_input,"r")
+    
+    #opens output file
     output=open(vcf_output,"w")
     
     replicates = {}
     individuals=[]
     
-    # cria um dicionário que associa o nome da amostra aos seus replicados
+    # creates a dictionary that associates every sample name with the names of its replicates
     for line in replicates_file:
         fields = line.split()
         individuals.append(fields[0])
@@ -41,7 +63,7 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
         
     replicate_number= len(fields)-1
     
-    # creates header variable with the names of all replicates from the vcf    
+    # writes the unnaltered header lines of the vcf to output file
     for line in vcf_file:
         if  line.startswith("#CHROM") == False:
             output.write(line)
@@ -57,19 +79,19 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
         for rep in rep_group:
             pos[rep]= header.index(rep)
     
-    # writes the new_header (joined replicates) to the output file
+    # writes the new_header (per individual) to the output file
     new_header="\t".join(header_keep + individuals)
     output.write(new_header + "\n")
     
-    genes=[]
-    deleted_loci=0
-    loci=0
-    
+    # iterates over vcf file
     for line in vcf_file:
-         
+        
+        #writing to output is enabled
         write= True
+        
         line = line.split()
-        ind_dictio= {}    
+        ind_dictio= {}
+        # keeps track of the index of the individual that the current gene group belongs to
         ind=0
         loci +=1
         
@@ -78,14 +100,18 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
             genes.append(line[i].split(":")[0])
             # creates list of the genes in N columns, where N is the number of replicates used for each sample
             if len(genes) == replicate_number:
-                # if an individual has contraditory information between its replicates the present snp is skipped
+                # if an individual has contraditory information between its replicates
                 if (len(set(genes)) > 1 and "./." not in set(genes)) or len(set(genes)) > 2:
+                    # writing is disabled for the current line
                     write = False
-                # generates dictiorary with genotypes of all individuals in present line
                 else:
+                    # if the percentage of missing data in the present group of replicates is 
+                    # below provided threshold, the allele information is added to the dictionary
                     if genes.count("./.") <= len(genes) * missing_ratio:
                         while "./." in genes: genes.remove("./.")
                         ind_dictio[individuals[ind]]= genes[0]
+                    # if the percentage of missing data in the present group of replicates is too
+                    # high, the whole sample is considered missing data
                     else:
                         ind_dictio[individuals[ind]]= "./."
                 # resets list of replicate genes       
@@ -102,7 +128,9 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
             line_write= "\t".join(new_line)
             output.write(line_write + "\n")
             
+            # adds the number of samples in the present locus that were not considered missing data to the counter
             non_missing += (list(ind_dictio.values()).count("0/1") + list(ind_dictio.values()).count("1/1") + list(ind_dictio.values()).count("0/0"))
+            # adds the number of samples in the present locus that were considered missing data to the counter
             missing += list(ind_dictio.values()).count("./.")
     
     output.close()
