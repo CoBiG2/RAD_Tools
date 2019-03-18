@@ -24,8 +24,7 @@ missing_ratio= arguments.missing_data_percentage/100
 def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
     
     non_missing=0
-    missing=0 
-    copies=0
+    missing=0
     
     vcf_file = open(vcf_input,"r")
     replicates_file = open(replicates_input,"r")
@@ -105,7 +104,6 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
             
             non_missing += (list(ind_dictio.values()).count("0/1") + list(ind_dictio.values()).count("1/1") + list(ind_dictio.values()).count("0/0"))
             missing += list(ind_dictio.values()).count("./.")
-            copies += len(ind_dictio.values())
     
     output.close()
     
