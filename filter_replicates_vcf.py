@@ -120,8 +120,6 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
                 ind += 1
         
         # line is writen only if none of the replicates had contraditory information
-        if write == False:
-            deleted_loci +=1
         
         if write == True:
             new_line= line[0:9] + list(ind_dictio.values())
@@ -132,6 +130,8 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
             non_missing += (list(ind_dictio.values()).count("0/1") + list(ind_dictio.values()).count("1/1") + list(ind_dictio.values()).count("0/0"))
             # adds the number of samples in the present locus that were considered missing data to the counter
             missing += list(ind_dictio.values()).count("./.")
+        else:
+            deleted_loci +=1
     
     output.close()
     
