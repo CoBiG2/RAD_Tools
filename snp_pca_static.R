@@ -44,12 +44,22 @@ if (!is.na(pops_file)) {
   cls <-rep(brewer.pal(n = 12, name = "Set3"), times=5)
   pch_v <- rep(c(16, 15, 17, 18), each=12)
   save(tab, file=paste(output_name, ".Rdata", sep=""))
-  par(mar =  c(5, 4, 4, 6) + 1.8)
+  # par(mar =  c(5, 4, 4, 6) + 1.8)
+  
+  plot.new()
+  leg = legend(0, 0, legend=levels(tab$pop), bty='n', pch=pch_v, plot=FALSE,
+               col=cls[0:length(tab$pop)])
+  # calculate right margin width in ndc
+  leg_wid <- grconvertX(leg$rect$w, to='ndc') - grconvertX(0, to='ndc')
+  
+  par(omd=c(0, 1-leg_wid, 0, 1))
   plot(tab$EV1, tab$EV2, col=cls[as.integer(tab$pop)], xlab="eigenvector 1",
     ylab="eigenvector 2", pch=pch_v[as.numeric(tab$pop)], solid=.2, cex=1,
     clab=1, leg=T, bg="white")
 
-  legend("topright", inset=c(-0.35,0), legend=levels(tab$pop), pch=pch_v, col=cls[0:length(tab$pop)], xpd = TRUE)
+  legend(par('usr')[2], par('usr')[4], legend=levels(tab$pop), bty='n', xpd=NA,
+         col=cls[0:length(tab$pop)], pch=pch_v)
+  
   print(cls[as.numeric(sorted_pops)])
   
 } else {
