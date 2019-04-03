@@ -103,6 +103,13 @@ The "static" version will produce a `PDF`, whereas the "non-static" will produce
 
 Script to filter annotations on a GFF file based on the contents of a tabular blast output.
 
+## filter_replicates_vcf
+
+Script that receives a vcf file with technical replicated samples, removes the lines with contrary information between replicates and marks as missing data the snp's that show 
+a percentage of missing data better than [-m X] between their replicates.
+
+It also takes as an input a file with the names of the replicates for each individual (as shown in the *Examples* directory).
+
 ## License
 
 Everything is under the GPLv3.
