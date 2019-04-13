@@ -32,8 +32,8 @@ missing_ratio= arguments.missing_data_percentage/100
 
 def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
     
-    # keeps track of the number of loci that are not considered missing data
-    non_missing=0
+    # keeps track of the total number of loci
+    total=0
     # keeps track of the number of loci that are considered missing data
     missing=0
     # keeps track of the number of loci that are deleted
@@ -125,9 +125,9 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
             new_line= line[0:9] + list(ind_dictio.values())
             line_write= "\t".join(new_line)
             output.write(line_write + "\n")
-            
+           
             # adds the number of samples in the present locus that were not considered missing data to the counter
-            non_missing += (list(ind_dictio.values()).count("0/1") + list(ind_dictio.values()).count("1/1") + list(ind_dictio.values()).count("0/0"))
+            total += len(list(ind_dictio.values()))
             # adds the number of samples in the present locus that were considered missing data to the counter
             missing += list(ind_dictio.values()).count("./.")
         else:
@@ -136,6 +136,6 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
     output.close()
     
     print("\n"+ str(deleted_loci) + " loci out of " + str(loci) + " were removed due to contraditory information between replicates.")
-    print(str(missing) + " Snp's out of " + str(non_missing + missing) + " were considered missing data." + "\n")
+    print(str(missing) + " Snp's out of " + str(total) + " were considered missing data." + "\n")
     
 filter_replicate_vcf(arguments.input_vcf,arguments.input_replicates,arguments.output)
