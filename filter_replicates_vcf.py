@@ -25,12 +25,14 @@ parser.add_argument("input_replicates", metavar="replicates.txt", type=str,
 parser.add_argument("output", metavar="output.vcf", type=str,
                         help="Output filtered VCF")
 parser.add_argument("-m","--missing_data_percentage", metavar="25",type=int, default=25,
-                        help= "Maximum percentage of missing values allowed in a set of replicates (default=25%")
+                        help= "Maximum percentage of missing values allowed in a set of replicates (default=25%)")
+parser.add_argument("-e","--error_percentage", metavar="10",type=int, default=10,
+                        help= "Maximum number of individuals with erroneous replicates.")
 arguments = parser.parse_args()
 
-missing_ratio= arguments.missing_data_percentage/100
+#missing_ratio= arguments.missing_data_percentage/100
 
-def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
+def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentage,error_percentage):
     
     # keeps track of the total number of loci
     total=0
@@ -88,7 +90,7 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
         
         #writing to output is enabled
         write= True
-        
+        error_count= 0
         line = line.split()
         ind_dictio= {}
         # keeps track of the index of the individual that the current gene group belongs to
@@ -103,11 +105,13 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
                 # if an individual has contraditory information between its replicates
                 if (len(set(genes)) > 1 and "./." not in set(genes)) or len(set(genes)) > 2:
                     # writing is disabled for the current line
-                    write = False
+                    error_count += 1
+                    if error_count > len(individuals) * error_percentage/ 100:
+                        write = False
                 else:
                     # if the percentage of missing data in the present group of replicates is 
                     # below provided threshold, the allele information is added to the dictionary
-                    if genes.count("./.") <= len(genes) * missing_ratio:
+                    if genes.count("./.") <= len(genes) * missing_percentage/ 100:
                         while "./." in genes: genes.remove("./.")
                         ind_dictio[individuals[ind]]= genes[0]
                     # if the percentage of missing data in the present group of replicates is too
@@ -138,4 +142,4 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output):
     print("\n"+ str(deleted_loci) + " loci out of " + str(loci) + " were removed due to contraditory information between replicates.")
     print(str(missing) + " Snp's out of " + str(total) + " were considered missing data." + "\n")
     
-filter_replicate_vcf(arguments.input_vcf,arguments.input_replicates,arguments.output)
+filter_replicate_vcf(arguments.input_vcf,arguments.input_replicates,arguments.output, arguments.missing_data_percentage, arguments.error_percentage)
