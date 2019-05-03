@@ -15,6 +15,7 @@
 # along with keep_central_snps. If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+from statistics import mode
 
 parser = argparse.ArgumentParser(prog='python3')
 
@@ -27,7 +28,7 @@ parser.add_argument("output", metavar="output.vcf", type=str,
 parser.add_argument("-m","--missing_data_percentage", metavar="25",type=int, default=25,
                         help= "Maximum percentage of missing values allowed in a set of replicates (default=25%)")
 parser.add_argument("-e","--error_percentage", metavar="10",type=int, default=10,
-                        help= "Maximum number of individuals with erroneous replicates.")
+                        help= "Maximum percentage of individuals per SNP with erroneous replicates.")
 arguments = parser.parse_args()
 
 #missing_ratio= arguments.missing_data_percentage/100
@@ -42,6 +43,8 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentag
     deleted_loci=0
     # keeps track of the total number of loci
     loci=0
+    #keeps track of ambiguities
+    amb=0
        
     genes=[]
     
@@ -112,8 +115,18 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentag
                     # if the percentage of missing data in the present group of replicates is 
                     # below provided threshold, the allele information is added to the dictionary
                     if genes.count("./.") <= len(genes) * missing_percentage/ 100:
-                        while "./." in genes: genes.remove("./.")
-                        ind_dictio[individuals[ind]]= genes[0]
+                        #while "./." in genes: 
+                            #genes.remove("./.")
+                        try:
+                            ind_dictio[individuals[ind]]= mode(genes)
+                        except:
+                            try:
+                                genes.remove("./.")
+                                ind_dictio[individuals[ind]]= mode(genes)
+                            except:
+                                amb += 1
+                                print(genes)
+                                ind_dictio[individuals[ind]]= genes[0]
                     # if the percentage of missing data in the present group of replicates is too
                     # high, the whole sample is considered missing data
                     else:
@@ -141,5 +154,6 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentag
     
     print("\n"+ str(deleted_loci) + " loci out of " + str(loci) + " were removed due to contraditory information between replicates.")
     print(str(missing) + " Snp's out of " + str(total) + " were considered missing data." + "\n")
+    print(str(amb) + " ambiguities found between replicates.")
     
 filter_replicate_vcf(arguments.input_vcf,arguments.input_replicates,arguments.output, arguments.missing_data_percentage, arguments.error_percentage)
