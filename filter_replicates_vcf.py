@@ -31,20 +31,18 @@ parser.add_argument("-e","--error_percentage", metavar="10",type=int, default=10
                         help= "Maximum percentage of individuals per SNP with erroneous replicates.")
 arguments = parser.parse_args()
 
-#missing_ratio= arguments.missing_data_percentage/100
-
 def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentage,error_percentage):
 
     # keeps track of the total number of loci
-    total=0
+    total = 0
     # keeps track of the number of loci that are considered missing data
-    missing=0
+    missing = 0
     # keeps track of the number of loci that are deleted
-    deleted_loci=0
+    deleted_loci = 0
     # keeps track of the total number of loci
-    loci=0
+    loci = 0
     #keeps track of ambiguities
-    amb=0
+    amb = 0
 
     genes=[]
 
@@ -55,10 +53,10 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentag
     replicates_file = open(replicates_input,"r")
 
     #opens output file
-    output=open(vcf_output,"w")
+    output = open(vcf_output,"w")
 
     replicates = {}
-    individuals=[]
+    individuals = []
 
     # creates a dictionary that associates every sample name with the names of its replicates
     for line in replicates_file:
@@ -75,30 +73,30 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentag
         if line.startswith("#CHROM"):
             header = line.split()
             # stores the part of the header that doesn't contain the names of the replicates
-            header_keep= header[0:9]
+            header_keep = header[0:9]
             break
 
     # creates a dictionary with the indexed position of all replicates in the header
-    pos={}
+    pos = {}
     for rep_group in replicates.values():
         for rep in rep_group:
-            pos[rep]= header.index(rep)
+            pos[rep] = header.index(rep)
 
     # writes the new_header (per individual) to the output file
-    new_header="\t".join(header_keep + individuals)
+    new_header = "\t".join(header_keep + individuals)
     output.write(new_header + "\n")
 
     # iterates over vcf file
     for line in vcf_file:
 
         #writing to output is enabled
-        write= True
-        error_count= 0
+        write = True
+        error_count = 0
         line = line.split()
-        ind_dictio= {}
+        ind_dictio = {}
         # keeps track of the index of the individual that the current gene group belongs to
-        ind=0
-        loci +=1
+        ind = 0
+        loci += 1
 
         # iteares over the columns of a line in a vcf file
         for i in range(9,len(line)):
@@ -115,21 +113,21 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentag
                     # if the percentage of missing data in the present group of replicates is
                     # below provided threshold, the allele information is added to the dictionary
                     if genes.count("./.") <= len(genes) * missing_percentage/ 100:
-                        #while "./." in genes:
-                            #genes.remove("./.")
                         try:
-                            ind_dictio[individuals[ind]]= mode(genes)
+                            ind_dictio[individuals[ind]] = mode(genes)
                         except:
                             try:
                                 genes.remove("./.")
-                                ind_dictio[individuals[ind]]= mode(genes)
+                                ind_dictio[individuals[ind]] = mode(genes)
+                            # in case of ambiguous results between replicates, the sample is
+                            # considered as missing data
                             except:
                                 amb += 1
-                                ind_dictio[individuals[ind]]= "./."
+                                ind_dictio[individuals[ind]] = "./."
                     # if the percentage of missing data in the present group of replicates is too
                     # high, the whole sample is considered missing data
                     else:
-                        ind_dictio[individuals[ind]]= "./."
+                        ind_dictio[individuals[ind]] = "./."
                 # resets list of replicate genes
                 genes=[]
                 # keeps track of the index of the current individual
@@ -138,8 +136,8 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentag
         # line is writen only if none of the replicates had contraditory information
 
         if write == True:
-            new_line= line[0:9] + list(ind_dictio.values())
-            line_write= "\t".join(new_line)
+            new_line = line[0:9] + list(ind_dictio.values())
+            line_write = "\t".join(new_line)
             output.write(line_write + "\n")
 
             # adds the number of samples in the present locus that were not considered missing data to the counter
@@ -147,7 +145,7 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentag
             # adds the number of samples in the present locus that were considered missing data to the counter
             missing += list(ind_dictio.values()).count("./.")
         else:
-            deleted_loci +=1
+            deleted_loci += 1
 
     output.close()
 
