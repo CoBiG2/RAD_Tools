@@ -125,7 +125,6 @@ def filter_replicate_vcf(vcf_input,replicates_input,vcf_output,missing_percentag
                                 ind_dictio[individuals[ind]]= mode(genes)
                             except:
                                 amb += 1
-                                print(genes)
                                 ind_dictio[individuals[ind]]= genes[0]
                     # if the percentage of missing data in the present group of replicates is too
                     # high, the whole sample is considered missing data
