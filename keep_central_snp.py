@@ -78,7 +78,7 @@ def write_vcf_body(vcf_path, output_path, locus_length):
                     for loci in buff:
                         loci_position = int(loci.split("\t")[2].split(":")[1])
                         # the snp ocurring closer to the read center is considered optimal.
-                        if abs(int(locus_length)/2-loci_position) < prev_best:
+                        if abs(int(locus_length)/2-loci_position) <= prev_best:
                             center = loci
                             prev_best = abs(int(locus_length)/2-loci_position)
 
