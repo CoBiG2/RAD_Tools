@@ -17,75 +17,103 @@
 import argparse
 import sys
 
+
 def get_args(args):
     parser = argparse.ArgumentParser(prog='python3')
-    
+
     parser.add_argument("input", metavar="input.vfc", type=str,
                         help="VCF file with all the SNPs.")
-    
-    parser.add_argument("-o","--output", metavar="output.vcf", dest="output", type=str,
+
+    parser.add_argument("-o", "--output", metavar="output.vcf", dest="output", type=str,
                         help="output file with the SNPs closest to the centre of each locus (default = ./center_snps_filtered.vcf)")
-    
-    parser.add_argument("-l","--len", metavar="int", dest="length", type=str,
-                        help="length of each locus (required)", required= True)
-    
+
+    parser.add_argument("-l", "--len", metavar="int", dest="length", type=str,
+                        help="length of each locus (required)", required=True)
+
     arguments = parser.parse_args(args)
     return arguments
 
-def write_vcf_headers(vcf_path,output_path):
-    vcf_file= open(vcf_path,"r")
-    out_file=open(output_path,"w")
-    
+# writes vcf header lines to output
+
+
+def write_vcf_headers(vcf_path, output_path):
+    vcf_file = open(vcf_path, "r")
+    out_file = open(output_path, "w")
+
     for line in vcf_file:
         if line.startswith("#"):
             out_file.write(line)
         else:
             break
-    
+
     vcf_file.close()
     out_file.close()
-    
 
-def write_vcf_body(vcf_path,output_path,locus_length):
-    
-    vcf_file= open(vcf_path,"r")
-    out_file=open(output_path,"a")
-    
-    buff=[]
-    stop_position=0
-    last_dist=0
-    dist=0
-    last_name=""
-    
-    for line in vcf_file:    
-        try:  
-            name=line.split("\t")[0]
+# Chooses the most central SNP based on loci ID and SNP read position
+
+
+def write_vcf_body(vcf_path, output_path, locus_length):
+
+    vcf_file = open(vcf_path, "r")
+    out_file = open(output_path, "a")
+
+    buff = []
+    dist = 0
+    last_id = ""
+    last_name = ""
+    loci_id = ""
+
+    for line in vcf_file:
+        try:
+            name = line.split("\t")[0]
             dist = int(line.split("\t")[1])
-            if dist >= stop_position or dist < last_dist or last_name != name:
-                
-                if len(buff)>0:
-                    out_file.write(buff[len(buff)//2])
-                    
-                buff=[]
-                stop_position = dist + int(locus_length)
+            loci_id = line.split("\t")[2].split(":")[0]
+
+            # if locus/ chromossome is different from last line, writes the
+            # previous best snps and creates a new list
+            if last_id != loci_id or last_name != name:
+
+                if len(buff) > 0:
+                    prev_best = int(locus_length)/2
+                    for loci in buff:
+                        loci_position = int(loci.split("\t")[2].split(":")[1])
+                        # the snp ocurring closer to the read center is considered optimal.
+                        if abs(int(locus_length)/2-loci_position) < prev_best:
+                            center = loci
+                            prev_best = abs(int(locus_length)/2-loci_position)
+
+                    out_file.write(center)
+
+                buff = []
                 buff.append(line)
             else:
                 buff.append(line)
-            last_dist=dist
-            last_name=name
-        except:
+
+            last_id = loci_id
+            last_name = name
+
+        except (ValueError, IndexError) as error:
             pass
-    
-    out_file.write(buff[len(buff)//2])
-        
-    vcf_file.close()        
+
+    # writes last iteration
+    prev_best = int(locus_length)/2
+    for loci in buff:
+        loci_position = int(loci.split("\t")[2].split(":")[1])
+        if abs(int(locus_length)/2-loci_position) < prev_best:
+            center = loci
+            prev_best = abs(int(locus_length)/2-loci_position)
+
+    out_file.write(center)
+
+    vcf_file.close()
     out_file.close()
 
+
 if __name__ == "__main__":
-    args= get_args(sys.argv[1:])
+    args = get_args(sys.argv[1:])
     try:
-        write_vcf_headers(args.input,args.output)
-        write_vcf_body(args.input,args.output,args.length)
-    except: 
-        write_vcf_headers(args.input,"central_snps_filtered.vcf")
-        write_vcf_body(args.input,"central_snps_filtered.vcf",args.length)  
+        write_vcf_headers(args.input, args.output)
+        write_vcf_body(args.input, args.output, args.length)
+    except IndexError:
+        write_vcf_headers(args.input, "central_snps_filtered.vcf")
+        write_vcf_body(args.input, "central_snps_filtered.vcf", args.length)
