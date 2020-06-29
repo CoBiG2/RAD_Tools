@@ -9,17 +9,26 @@ parser = argparse.ArgumentParser(description="Convert VCF to nexus for SNAPP")
 
 parser.add_argument("-in", dest="infile", help="The vcftools input file",
                     required=True)
+parser.add_argument("-chr", dest="chromossomes",
+                    help="Use if your VCF is organized by chromossomes"
+                         "and not by loci",
+                    action='store_true')
 
 arg = parser.parse_args()
 
 
-def vcf2snapp(vcf_file, output_file):
+def vcf2snapp(vcf_file, output_file, chromossomes):
     """
     Converts VCF file into Nexus binary format to SNAPP. Ignores non-biallelic
     SNPs.
     """
 
     fh = open(vcf_file)
+
+    if chromossomes is True:
+        chrom_p = lambda x: " ".join(x[0:2])
+    else:
+        chrom_p = lambda x: x[0]
 
     chroms = []
 
@@ -37,7 +46,8 @@ def vcf2snapp(vcf_file, output_file):
 
             # Get locus number. Check if this locus has already been recorded.
             # If so, ignore
-            chrom = fields[0]
+
+            chrom = chrom_p(fields)
             if chrom in chroms:
                 continue
 
@@ -53,13 +63,13 @@ def vcf2snapp(vcf_file, output_file):
                 # Get genotype
                 gen = fields[taxa_list.index(tx)]
 
-                if gen == "./.":
+                if "./." in gen:
                     nexus_data[tx].append("?")
-                elif gen == "0|0":
+                elif "0|0" in gen or "0/0" in gen:
                     nexus_data[tx].append("0")
-                elif gen == "1|1":
+                elif "1|1" in gen or "1/1" in gen:
                     nexus_data[tx].append("2")
-                elif gen == "1|0" or gen == "0|1":
+                elif "1|0" in gen or "0|1" in gen or "0/1" in gen or "1/0" in gen:
                     nexus_data[tx].append("1")
             else:
                 chroms.append(chrom)
@@ -87,8 +97,9 @@ def main():
     # Args
     infile = arg.infile
     output_file = infile.split(".")[0] + ".nex"
+    chromossomes = arg.chromossomes
 
-    vcf2snapp(infile, output_file)
+    vcf2snapp(infile, output_file, chromossomes)
 
 
 main()

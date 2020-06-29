@@ -37,7 +37,7 @@ if (!is.na(pops_file)) {
   pop_code <- read.table(pops_file, sep="\t")
   sorted_pops <- pop_code$V2[order(match(pop_code$V1, sample.id))]
   tab <- data.frame(sample.id = pca$sample.id,
-    pop = sorted_pops,
+    pop = factor(sorted_pops),
     EV1 = pca$eigenvect[,1],
     EV2 = pca$eigenvect[,2],
     stringsAsFactors=F)
