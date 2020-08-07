@@ -1,7 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # Copyright 2015 Diogo N. Silva <o.diogosilva@gmail.com>
-# compare_pairs.py is free software: you can redistribute it and/or modify
+# Copyright 2020 Francisco Pina-Martins
+# vcf_parser.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
@@ -43,6 +44,9 @@ PARSER.add_argument("--random-snp", dest="rnd_snp", const=True,
 PARSER.add_argument("--center-snp", dest="center_snp", const=True,
                     action="store_const", help="Filters the VCF file so that"
                     " only the SNP closest to the locus center is retained.")
+PARSER.add_argument("--distance", dest="distance", default=0, type=int,
+                    help="Filters the VCF file so that"
+                    " each SNP is at least DIST appart from the next.")
 
 ARG = PARSER.parse_args()
 
@@ -187,6 +191,38 @@ def filter_center_snp(vcf_file):
         closest = min(pos_list, key=lambda x: abs(x - 45))
         vcf_out.write(line_list[pos_list.index(closest)])
 
+def filter_min_dist(vcf_file, dist):
+    """
+    Filters a VCF to ensure that loci are at least *dist* apart
+    """
+
+    vcf_output = vcf_file.split(".")[0] + "_mindist" + str(dist) + ".vcf"
+
+    current_chrom = ""
+    last_locus = []
+
+    with open(vcf_file) as vcf_handle, open(vcf_output, "w") as vcf_out:
+
+        for line in vcf_handle:
+            if line.startswith("#"):
+                vcf_out.write(line)
+
+            elif line.strip() != "":
+
+                # Get chrom number
+                chrom = line.split()[0]
+
+                # Get SNP position
+                pos = int(line.split()[1])
+
+                if chrom == current_chrom and pos - last_locus >= dist:
+                    vcf_out.write(line)
+                    last_locus = pos
+                elif chrom != current_chrom:
+                    last_locus = pos
+                    current_chrom = chrom
+                    vcf_out.write(line)
+
 
 def main():
     """
@@ -209,5 +245,8 @@ def main():
 
     if ARG.center_snp:
         filter_center_snp(vcf_file)
+
+    if ARG.distance > 0:
+        filter_min_dist(vcf_file, ARG.distance)
 
 main()
