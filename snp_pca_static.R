@@ -53,8 +53,8 @@ if (!is.na(pops_file)) {
   leg_wid <- grconvertX(leg$rect$w, to='ndc') - grconvertX(0, to='ndc')
   
   par(omd=c(0, 1-leg_wid, 0, 1))
-  plot(tab$EV1, tab$EV2, col=cls[as.integer(tab$pop)], xlab="eigenvector 1",
-    ylab="eigenvector 2", pch=pch_v[as.numeric(tab$pop)], solid=.2, cex=1,
+  plot(tab$EV1, tab$EV2, col=cls[as.integer(tab$pop)], xlab="PC 1",
+    ylab="PC 2", pch=pch_v[as.numeric(tab$pop)], solid=.2, cex=1,
     clab=1, leg=T, bg="white")
 
   legend(par('usr')[2], par('usr')[4], legend=levels(tab$pop), bty='n', xpd=NA,
@@ -67,7 +67,7 @@ if (!is.na(pops_file)) {
     EV1 = pca$eigenvect[, 1],
     EV2 = pca$eigenvect[, 2],
     stringsAsFactors=F)
-  plot(tab$EV1, tab$EV2, xlab="eigenvector 1", ylab="eigenvector 2")
+  plot(tab$EV1, tab$EV2, xlab="PC 1", ylab="PC 2")
 }
 
 # remove temporary gds file
