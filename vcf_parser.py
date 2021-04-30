@@ -151,7 +151,8 @@ def filter_random_snp(vcf_file):
 
 def filter_center_snp(vcf_file):
     """
-    Filters a VCF file so that only one SNP per locus (the first) is retained
+    Filters a VCF file so that only one SNP per locus (the one closer to the
+    center) is retained
     """
 
     vcf_output = vcf_file.split(".")[0] + "CenterSNP.vcf"
