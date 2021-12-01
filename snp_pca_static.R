@@ -74,3 +74,38 @@ if (!is.na(pops_file)) {
 file.remove("temp.gds")
 
 dev.off()
+
+##create matrix with pairwise euclidean distance
+mat <- dist(tab, method="euclidean", diag = F, upper =F, p=2)
+distance_matrix <- as.matrix(dist(mat))
+write.table(distance_matrix, file = "pairwise_distance_matrix.txt", sep = "\t", row.names = TRUE, col.names = NA)
+
+#list first 6 eigen values
+head_eigen <- as.data.frame(head(round(pc.percent, 2))) 
+head_eigen$index <- c("1","2","3","4","5","6")
+colnames(head_eigen) <- c("varexp","pcindex")
+
+#combined plot - paiwise pca + eigen values plot
+library(pryr)
+library(grid)
+png(paste("pca_combined_plot", ".png", sep=""))
+  #plot pairwise pca using the first four vectors
+p1 %<a-% pairs(pca$eigenvect[,1:4], labels = lbls, col=tab$pop, 
+               lower.panel = NULL,
+               oma=c(4,4,6,10), pch=16)
+  #plot the first 6 eigen values
+p2 <-ggplot(head_eigen, aes(x=pcindex, y = varexp), group=1) +
+  geom_bar(stat = "identity", width=0.6, fill="steelblue") +
+  theme_bw() +
+  geom_point(color="darkblue")+
+  geom_text(aes(label=varexp), vjust=-0.3, size=4)+
+  geom_line(color="darkblue" ,group=1)+
+  ylim(0,5)+
+  ylab("Explained variance (%)") + xlab("Principle Component Number")
+  #two plots in the same figure
+par(xpd=TRUE)
+vp <- viewport(width = 0.4, height = 0.3, x = 0.23, y = 0.2)
+print(p1)
+print(p2, vp=vp)
+legend(0.9,0.7, fill=unique(tab$pop), legend = c(levels(tab$pop)), cex = 0.6)
+dev.off()
