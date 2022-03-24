@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-# Copyright 2018 Francisco Pina Martins <f.pinamartins@gmail.com>
+# Copyright 2018-2022 Francisco Pina Martins <f.pinamartins@gmail.com>
 # segregating_loci_finder.py is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
-# Loci_counter is distributed in the hope that it will be useful,
+# segregating_loci_finder.py is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
@@ -14,10 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Loci_counter. If not, see <http://www.gnu.org/licenses/>.
 
+## Summary:
 # This script will compare two groups of individuals and highlight any
-# loci that segregate both groups
+# loci that segregate both groups. Only two groups are supported
 
-# Usage: python3 segregating_loci_finder.py /path/to/file.vcf \
+## Usage:
+# python3 segregating_loci_finder.py /path/to/file.vcf \
 # number_of_1st_group_individuals(int)
 
 import re
@@ -74,17 +76,29 @@ def get_freqs(vcf_data):
     return rel_freqs
 
 
-def segregating_freqs(loci):
+def segregating_freqs(loci, seg_type="full"):
     """
     Defines wether a locus segregates the two groups
     For now only works with full segregation
     """
+    def _full_segregation(loc, dat):
+        """
+        Returns only fully segregated loci:
+        Group1 is 100% AA, Aa or aa, and Group2 is 0% of that allele
+        """
+        segregators = [loc for k, v in data[0].items()
+                       if (data[1][k] == 0 and v == 1)
+                       or (data[1][k] == 1 and v == 0)]
+
+        return segregators
+
+    if seg_type == "full":
+        seg_func = _full_segregation
+
     segregators = []
     for locus, data in loci.items():
         try:
-            segregators += [locus for k, v in data[0].items()
-                            if (data[1][k] == 0 and v == 1)
-                            or (data[1][k] == 1 and v == 0)]
+            segregators += seg_func(locus, data)
         except AttributeError:
             pass
 

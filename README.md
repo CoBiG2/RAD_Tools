@@ -81,7 +81,7 @@ Each line should start with the population name, followed by ":" followed by the
     Pop1:Sample1 Sample2 Sample3
     Pop2:Sample4 Sample5 Sample6 Sample7
 
-This script requires the [PyVCF](https://github.com/jamescasbon/PyVCF) pacakge
+This script requires the [PyVCF](https://github.com/jamescasbon/PyVCF) package
 
 ## snp_pca.R / snp_pca_static.R
 
@@ -98,6 +98,12 @@ Indiv4  Pop2
 ```
 
 The "static" version will produce a `PDF`, whereas the "non-static" will produce a plotly HTML file.
+
+## segregating_loci_finder.py
+
+This script will find any loci that are fully segregated between two groups in a VCF file.
+It is very basic so far, and requires all individuals from a group to be sequential, eg. the first 3 individuals are group 1 and the remainder are group 2. It takes 2 arguments, the first is the path to your VCF file, and the second is the number of individuals in the first group.
+Also, only supports 2 groups. The segregation can be of any type, but it has to be 100%. This means that a locus that is 100% heterozygous in group 1 is considered segregated from between groups as long as group 2 has no heterozygous individuals.
 
 ## bl_gff_2_annotation.py
 
