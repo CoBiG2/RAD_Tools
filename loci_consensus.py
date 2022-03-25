@@ -54,7 +54,7 @@ def consensus(sequence_list):
     for column in zip(*sequence_list):
 
         # Remove gaps, missing characters and duplicate entries in column
-        column = set([x for x in column if x != "-" and x != "N"])
+        column = {x for x in column if x not in ("-", "N")}
 
         if len(column) == 1:
             con += "".join(column)
@@ -79,7 +79,7 @@ def list_parser(list_filename):
     for lines in loci_file:
         lines = lines.strip().split()
         locus_num_id = int(re.search(r"\d+$", lines[0]).group()) - 1
-        loci_set[str(locus_num_id)] = lines[1]
+        loci_set[str(locus_num_id)] = lines[-1]
 
     loci_file.close()
 
