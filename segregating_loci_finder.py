@@ -102,7 +102,7 @@ def segregating_freqs(loci, seg_type="full"):
         except AttributeError:
             pass
 
-    return segregators
+    return list(dict.fromkeys(segregators))  # Remove dupes
 
 
 if __name__ == "__main__":
