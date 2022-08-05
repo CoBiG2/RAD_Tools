@@ -43,7 +43,7 @@ def vcf_parser(vcf_filename, group_split_point):
                 print(groups)
         else:
             lines = lines.split()
-            locus = lines[0]
+            locus = "\t".join(lines[0:2])
             data = lines[9:]
             groups = [data[:group_split_point], data[group_split_point:]]
             gr_freqs = [get_freqs(x) for x in groups]
