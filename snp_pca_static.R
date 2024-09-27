@@ -2,6 +2,10 @@
 # snp_pca.R performs a PCA using the SNPRelate R package using a VCF file
 # and an option populations files
 
+# Altered from the original: 
+#   displays the percentage of variance explained by each principal component in the axis labels
+#   slightly altered the pch and cls variables
+
 # Usage:
 # snp_pca.R vcf_file output_file_name popupations_file[optional]
 
@@ -28,6 +32,7 @@ print(pca)
 pc.percent<- pca$varprop * 100
 print(round(pc.percent, 2))
 
+
 # Open figure driver
 pdf(paste(output_name, ".pdf", sep=""))
 
@@ -41,8 +46,8 @@ if (!is.na(pops_file)) {
     EV1 = pca$eigenvect[,1],
     EV2 = pca$eigenvect[,2],
     stringsAsFactors=F)
-  cls <-rep(brewer.pal(n = 12, name = "Set3"), times=5)
-  pch_v <- rep(c(16, 15, 17, 18), each=12)
+  cls <-rep(brewer.pal(n = 5, name = "Set1"), times=5)
+  pch_v <- rep(c(16, 15, 17, 18), each=5)
   save(tab, file=paste(output_name, ".Rdata", sep=""))
   # par(mar =  c(5, 4, 4, 6) + 1.8)
   
@@ -53,9 +58,11 @@ if (!is.na(pops_file)) {
   leg_wid <- grconvertX(leg$rect$w, to='ndc') - grconvertX(0, to='ndc')
   
   par(omd=c(0, 1-leg_wid, 0, 1))
-  plot(tab$EV1, tab$EV2, col=cls[as.integer(tab$pop)], xlab="PC 1",
-    ylab="PC 2", pch=pch_v[as.numeric(tab$pop)], solid=.2, cex=1,
+  plot1 <- plot(tab$EV1, tab$EV2, col=cls[as.integer(tab$pop)], xlab=paste("PC 1: ", print(round(pc.percent[1],2)),"%", sep = ""),
+    ylab=paste("PC 2: ", print(round(pc.percent[2],2)),"%", sep = ""), pch=pch_v[as.numeric(tab$pop)], solid=.2, cex=1.2,
     clab=1, leg=T, bg="white")
+  
+#  text(tab$EV1 - 1, tab$EV2, labels=tab$sample.id)
 
   legend(par('usr')[2], par('usr')[4], legend=levels(tab$pop), bty='n', xpd=NA,
          col=cls[0:length(tab$pop)], pch=pch_v)
