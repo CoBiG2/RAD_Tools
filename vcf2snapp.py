@@ -63,7 +63,7 @@ def vcf2snapp(vcf_file, output_file, chromossomes):
                 # Get genotype
                 gen = fields[taxa_list.index(tx)]
 
-                if "./." in gen:
+                if "./." in gen or "." in gen:
                     nexus_data[tx].append("?")
                 elif "0|0" in gen or "0/0" in gen:
                     nexus_data[tx].append("0")
